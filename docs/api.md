@@ -285,3 +285,36 @@ GET /api/v1/bi/exports/corridors.csv
 Filtros comunes: `date_from`, `date_to`, `origin_country`, `destination_country`, `currency`, `status`.
 
 `CLIENT` recibe `403 BI_FORBIDDEN`. Las exportaciones CSV son agregadas y no incluyen PII.
+
+## Blockchain y trazabilidad Fase 8
+
+Endpoints protegidos por autenticacion:
+
+```text
+GET /api/v1/blockchain/info
+GET /api/v1/blockchain/metrics
+GET /api/v1/blockchain/blocks
+GET /api/v1/blockchain/blocks/{block_index}
+GET /api/v1/blockchain/transactions/{remittance_id}/history
+GET /api/v1/blockchain/verify/{remittance_id}
+GET /api/v1/blockchain/validate
+```
+
+Permisos:
+
+- `ADMIN`: consulta de bloques, metricas, historial, verificacion de remesa y validacion completa de cadena.
+- `RISK_ANALYST`: consulta de bloques, metricas, historial y verificacion de remesa.
+- `CLIENT`: historial y verificacion solo sobre remesas propias; no puede listar ni validar la cadena completa.
+
+Los endpoints devuelven metadatos tecnicos, hashes SHA-256, enlaces entre bloques, nonce, dificultad y estado de validacion. No devuelven PII, numeros completos de cuentas, tarjetas, documentos, CVV, contrasenas ni tokens.
+
+La validacion de evidencia reconstruye el hash canonico desde la remesa o evaluacion de riesgo operacional y lo compara contra el hash registrado en la cadena local. Si la capa blockchain falla durante una operacion, se registra auditoria y la remesa conserva su flujo transaccional normal.
+
+Eventos activos registrados por el flujo actual:
+
+- `REMITTANCE_CREATED`
+- `REMITTANCE_AVAILABLE`
+- `RISK_ASSESSMENT_RECORDED`
+- `REMITTANCE_COMPLETED`
+
+`REMITTANCE_CONFIRMED` no se expone como evento activo porque no existe un punto de dominio separado en el lifecycle actual.

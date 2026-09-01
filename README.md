@@ -237,3 +237,41 @@ GET /api/v1/bi/executive-summary
 GET /api/v1/bi/exports/kpis.csv
 GET /api/v1/bi/exports/corridors.csv
 ```
+
+## Blockchain y trazabilidad Fase 8
+
+FIDUCIA agrega una capa local de evidencia blockchain para registrar eventos relevantes de remesas y evaluaciones de riesgo. Es una implementacion educativa, privada y local: no crea criptomonedas, no usa wallets, no publica datos personales en una red publica y no mueve dinero en cadena.
+
+Eventos registrados:
+
+- `REMITTANCE_CREATED`
+- `REMITTANCE_AVAILABLE`
+- `RISK_ASSESSMENT_RECORDED`
+- `REMITTANCE_COMPLETED`
+
+`REMITTANCE_CONFIRMED` no forma parte del catalogo activo porque el flujo actual no tiene una confirmacion separada de la creacion/disponibilidad.
+
+Endpoints utiles:
+
+```text
+GET /api/v1/blockchain/info
+GET /api/v1/blockchain/metrics
+GET /api/v1/blockchain/blocks
+GET /api/v1/blockchain/blocks/{block_index}
+GET /api/v1/blockchain/transactions/{remittance_id}/history
+GET /api/v1/blockchain/verify/{remittance_id}
+GET /api/v1/blockchain/validate
+```
+
+`ADMIN` puede listar, verificar y validar la cadena completa. `RISK_ANALYST` puede consultar evidencia y verificar remesas. `CLIENT` solo puede consultar historial y verificacion de sus propias remesas.
+
+La idempotencia de remesas usa entidad, referencia, evento y schema. La idempotencia de riesgo usa `risk_assessment_id` para permitir multiples evaluaciones legitimas sobre una misma remesa. La escritura se serializa con un lock local dentro de una instancia; no es una garantia distribuida.
+
+Comandos:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m pytest backend\tests\test_phase8_blockchain.py
+.\backend\.venv\Scripts\python.exe scripts\demo_blockchain_integrity.py
+cd frontend
+npm run build
+```

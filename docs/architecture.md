@@ -120,3 +120,20 @@ transactions / users / risk_assessments / forecast artifacts
 ```
 
 BI no recalcula riesgo, no reentrena forecasting, no crea un modelo nuevo y no expone PII en el dashboard ejecutivo.
+
+## Extension Fase 8
+
+La Fase 8 agrega trazabilidad blockchain como capa de evidencia local:
+
+```text
+Remesa / evaluacion de riesgo
+  -> payload canonico sin PII
+  -> hash SHA-256
+  -> bloque local append-only
+  -> endpoints de historial, verificacion y validacion
+  -> frontend Trazabilidad blockchain
+```
+
+La cadena no sustituye la base operacional ni ejecuta pagos. Su responsabilidad es demostrar integridad verificable de eventos: remesa creada, remesa disponible, evaluacion de riesgo registrada y remesa completada.
+
+Los modelos `fraud-model-v1`, `anomaly-model-v1`, `rules-v1`, `risk-engine-v1.1` y `remittance-forecast-v1` permanecen sin cambios. Blockchain consume sus resultados como evidencia, pero no recalcula riesgo, no modifica thresholds y no bloquea automaticamente una remesa.

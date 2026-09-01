@@ -1,6 +1,7 @@
 from app.models.audit_log import AuditLog
 from app.models.beneficiary import Beneficiary
 from app.models.beneficiary_relationship import BeneficiaryRelationship
+from app.models.blockchain import BlockchainBlock
 from app.models.country import Country
 from app.models.department import Department
 from app.models.exchange_rate import ExchangeRate
@@ -18,6 +19,7 @@ __all__ = [
     "AuditLog",
     "Beneficiary",
     "BeneficiaryRelationship",
+    "BlockchainBlock",
     "Country",
     "Department",
     "ExchangeRate",

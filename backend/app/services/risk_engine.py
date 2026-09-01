@@ -17,6 +17,7 @@ from app.risk.features import build_operational_features
 from app.risk.rules import RULES_VERSION, evaluate_rules
 from app.schemas.risk_engine import RiskAssessmentWithRemittance
 from app.services.audit import log_audit_event
+from app.services.blockchain import record_risk_event
 from app.services.ml_risk import get_model_info, predict_fraud_probability
 
 
@@ -84,6 +85,7 @@ def evaluate_remittance(db: Session, transaction: Transaction, *, actor_user_id:
             "risk_band_thresholds": assessment.risk_band_thresholds_json,
         },
     )
+    record_risk_event(db, assessment, actor_user_id)
     return assessment
 
 

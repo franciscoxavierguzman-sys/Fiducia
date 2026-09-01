@@ -113,3 +113,25 @@ Las features incluidas y excluidas para ML se documentan en `docs/phase4-ml-plan
 | repeat_sender_rate | decimal nullable | Clientes activos con mas de una remesa / clientes activos |
 | risk_distribution | array | Distribucion agregada LOW, MEDIUM, HIGH desde risk_assessments |
 | forecast_outlook | object | Resumen de remittance-forecast-v1 para BI |
+
+## Variables Fase 8
+
+| Variable | Tipo | Descripcion |
+| --- | --- | --- |
+| blockchain.block_index | integer | Posicion secuencial del bloque dentro de la cadena local |
+| blockchain.event_type | string | Evento operativo registrado |
+| blockchain.entity_type | string | Tipo de entidad evidenciada: remittance, risk_assessment o system |
+| blockchain.entity_reference | string | Referencia interna no sensible de la entidad |
+| blockchain.evidence_hash | string | SHA-256 del payload canonico de evidencia |
+| blockchain.previous_hash | string | Hash del bloque anterior |
+| blockchain.block_hash | string | SHA-256 del encabezado canonico del bloque |
+| blockchain.nonce | integer | Nonce usado para cumplir la dificultad configurada |
+| blockchain.difficulty | integer | Cantidad de ceros iniciales requeridos en la prueba de trabajo local |
+| blockchain.schema_version | string | Version del esquema de evidencia |
+| blockchain.idempotency_key | string | Clave deterministica para evitar duplicar el mismo evento |
+| blockchain.record_status | string | Estado de registro del bloque |
+| blockchain.mining_time_ms | integer | Tiempo local aproximado de minado |
+
+La evidencia blockchain excluye PII y datos sensibles. Para remesas se registran identificadores internos, paises, monedas, montos, estado y fecha canonica. Para riesgo se registran versiones, scores agregados, banda de riesgo y accion recomendada, manteniendo `ml_probability` separada de la clasificacion.
+
+La idempotencia de riesgo usa `risk_assessment_id` como identidad estable para permitir multiples evaluaciones validas de una misma remesa sin duplicar la misma evaluacion.

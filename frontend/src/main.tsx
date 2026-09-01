@@ -449,6 +449,52 @@ type BIExecutiveSummary = {
   attention_points: Array<{ priority: 'INFO' | 'ATTENTION'; code: string; message: string; source_kpis: string[] }>;
   forecast_outlook: BIForecast;
 };
+type BlockchainInfo = {
+  blockchain_engine_version: string;
+  hash_algorithm: string;
+  difficulty: number;
+  total_blocks: number;
+  total_evidence: number;
+  genesis_hash: string | null;
+  last_block_hash: string | null;
+  chain_valid: boolean;
+  supported_schema_versions: string[];
+};
+type BlockchainMetrics = {
+  total_blocks: number;
+  total_evidence: number;
+  blocks_by_event_type: Record<string, number>;
+  chain_valid: boolean;
+  last_block_timestamp: string | null;
+  average_mining_time_ms: number | null;
+};
+type BlockchainBlock = {
+  block_index: number;
+  timestamp: string;
+  event_type: string;
+  entity_type: string;
+  entity_reference: string;
+  evidence_hash: string;
+  previous_hash: string;
+  nonce: number;
+  difficulty: number;
+  block_hash: string;
+  schema_version: string;
+  idempotency_key: string;
+  record_status: string;
+  mining_time_ms: number;
+  created_at: string;
+};
+type BlockchainValidation = {
+  valid: boolean;
+  blocks_checked: number;
+  errors: Array<{ block_index: number; code: string }>;
+};
+type BlockchainVerification = {
+  status: string;
+  verified: number;
+  mismatches: Array<{ block_index: number; expected_hash?: string; recorded_hash?: string }>;
+};
 type View =
   | 'dashboard'
   | 'beneficiaries'
@@ -463,6 +509,7 @@ type View =
   | 'analytics'
   | 'risk'
   | 'risk-review'
+  | 'blockchain'
   | 'forecasting';
 type AuthMode = 'login' | 'register';
 type MessageType = 'error' | 'success';
@@ -664,6 +711,9 @@ function App() {
             {canViewAnalytics ? (
               <NavButton active={view === 'risk-review'} onClick={() => setView('risk-review')} label="Revision de riesgo" />
             ) : null}
+            {canViewAnalytics ? (
+              <NavButton active={view === 'blockchain'} onClick={() => setView('blockchain')} label="Trazabilidad blockchain" />
+            ) : null}
             <NavButton active={view === 'profile'} onClick={() => setView('profile')} label="Mi perfil" />
           </nav>
           {message ? <StatusMessage message={message} type={messageType} /> : null}
@@ -716,6 +766,7 @@ function App() {
           {view === 'forecasting' && canViewAnalytics ? <ForecastingView /> : null}
           {view === 'risk' && canViewAnalytics ? <RiskIntelligenceView /> : null}
           {view === 'risk-review' && canViewAnalytics ? <RiskReviewView showMessage={showMessage} /> : null}
+          {view === 'blockchain' && canViewAnalytics ? <BlockchainView user={currentUser} transactions={[...transactions, ...receivedTransactions]} /> : null}
           {view === 'profile' ? (
             <ProfileView user={currentUser} onUpdated={(user) => setCurrentUser(user)} showMessage={showMessage} />
           ) : null}
@@ -1707,6 +1758,217 @@ function RiskIntelligenceView() {
             El motor combina reglas, probabilidad ML y comportamiento atipico. Recomienda revision interna cuando corresponde,
             pero no confirma fraude ni bloquea operaciones de forma automatica.
           </p>
+        </AnalyticsPanel>
+      </section>
+    </div>
+  );
+}
+
+function BlockchainView({ user, transactions }: { user: User; transactions: Transaction[] }) {
+  const [info, setInfo] = React.useState<BlockchainInfo | null>(null);
+  const [metrics, setMetrics] = React.useState<BlockchainMetrics | null>(null);
+  const [blocks, setBlocks] = React.useState<BlockchainBlock[]>([]);
+  const [validation, setValidation] = React.useState<BlockchainValidation | null>(null);
+  const [selectedBlock, setSelectedBlock] = React.useState<BlockchainBlock | null>(null);
+  const [remittanceId, setRemittanceId] = React.useState(transactions[0]?.id.toString() ?? '');
+  const [history, setHistory] = React.useState<BlockchainBlock[]>([]);
+  const [verification, setVerification] = React.useState<BlockchainVerification | null>(null);
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [isVerifying, setIsVerifying] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const isAdmin = user.role.name === 'ADMIN';
+
+  React.useEffect(() => {
+    let isMounted = true;
+    async function loadBlockchain() {
+      setIsLoading(true);
+      setError(null);
+      try {
+        const [infoData, metricsData, blockData] = await Promise.all([
+          request<BlockchainInfo>('/blockchain/info'),
+          request<BlockchainMetrics>('/blockchain/metrics'),
+          request<BlockchainBlock[]>('/blockchain/blocks'),
+        ]);
+        const validationData = isAdmin ? await request<BlockchainValidation>('/blockchain/validate') : null;
+        if (!isMounted) return;
+        setInfo(infoData);
+        setMetrics(metricsData);
+        setBlocks(blockData);
+        setSelectedBlock(blockData[blockData.length - 1] ?? null);
+        setValidation(validationData);
+      } catch {
+        if (isMounted) setError('No se pudo cargar la trazabilidad blockchain. Verifica permisos y backend activo.');
+      } finally {
+        if (isMounted) setIsLoading(false);
+      }
+    }
+    loadBlockchain();
+    return () => {
+      isMounted = false;
+    };
+  }, [isAdmin]);
+
+  async function verifyRemittance() {
+    const id = Number(remittanceId);
+    if (!Number.isInteger(id) || id <= 0) {
+      setError('Ingresa un identificador de remesa valido.');
+      return;
+    }
+    setIsVerifying(true);
+    setError(null);
+    try {
+      const [verificationData, historyData] = await Promise.all([
+        request<BlockchainVerification>(`/blockchain/verify/${id}`),
+        request<BlockchainBlock[]>(`/blockchain/transactions/${id}/history`),
+      ]);
+      setVerification(verificationData);
+      setHistory(historyData);
+    } catch {
+      setVerification(null);
+      setHistory([]);
+      setError('No se encontro trazabilidad para esa remesa o tu perfil no tiene acceso.');
+    } finally {
+      setIsVerifying(false);
+    }
+  }
+
+  if (isLoading) return <section className="panel text-sm text-slate-600">Cargando trazabilidad blockchain...</section>;
+  if (error && blocks.length === 0) return <StatusMessage message={error} type="error" />;
+
+  return (
+    <div className="grid gap-6">
+      {error ? <StatusMessage message={error} type="error" /> : null}
+      <section className="panel">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fiducia-teal text-white">
+              <ShieldCheck size={20} />
+            </div>
+            <div>
+              <h1 className="section-title">Trazabilidad blockchain</h1>
+              <p className="text-sm text-slate-500">Evidencia verificable de eventos operativos sin exponer datos personales.</p>
+            </div>
+          </div>
+          <span className={info?.chain_valid ? 'rounded-full bg-emerald-50 px-3 py-1 text-sm font-semibold text-emerald-700' : 'rounded-full bg-red-50 px-3 py-1 text-sm font-semibold text-red-700'}>
+            {info?.chain_valid ? 'Cadena integra' : 'Revision requerida'}
+          </span>
+        </div>
+        <div className="mt-6 grid gap-3 md:grid-cols-5">
+          <Metric label="Bloques" value={(metrics?.total_blocks ?? 0).toString()} />
+          <Metric label="Evidencias" value={(metrics?.total_evidence ?? 0).toString()} />
+          <Metric label="Dificultad" value={(info?.difficulty ?? 0).toString()} />
+          <Metric label="Algoritmo" value={info?.hash_algorithm ?? 'N/D'} />
+          <Metric label="Ultimo bloque" value={`#${Math.max(0, (info?.total_blocks ?? 1) - 1)}`} />
+        </div>
+        <p className="mt-4 break-all text-xs leading-6 text-slate-500">Ultimo hash: {info?.last_block_hash ?? 'N/D'}</p>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
+        <AnalyticsPanel title="Explorador de bloques">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs">
+              <thead className="text-slate-500">
+                <tr>
+                  <th className="py-2 pr-3">Bloque</th>
+                  <th className="py-2 pr-3">Evento</th>
+                  <th className="py-2 pr-3">Referencia</th>
+                  <th className="py-2 pr-3">Hash</th>
+                  <th className="py-2 pr-3">Detalle</th>
+                </tr>
+              </thead>
+              <tbody>
+                {blocks.map((block) => (
+                  <tr className="border-t border-slate-100" key={block.block_index}>
+                    <td className="py-2 pr-3 font-semibold text-fiducia-navy">#{block.block_index}</td>
+                    <td className="py-2 pr-3">{blockchainEventLabel(block.event_type)}</td>
+                    <td className="py-2 pr-3">{block.entity_reference}</td>
+                    <td className="py-2 pr-3 font-mono">{shortHash(block.block_hash)}</td>
+                    <td className="py-2 pr-3">
+                      <button className="icon-button" type="button" onClick={() => setSelectedBlock(block)} title="Ver bloque">
+                        <Eye size={16} />
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </AnalyticsPanel>
+
+        <AnalyticsPanel title="Detalle del bloque">
+          {selectedBlock ? (
+            <div className="space-y-3">
+              <SummaryRow label="Indice" value={`#${selectedBlock.block_index}`} />
+              <SummaryRow label="Evento" value={blockchainEventLabel(selectedBlock.event_type)} />
+              <SummaryRow label="Esquema" value={selectedBlock.schema_version} />
+              <SummaryRow label="Nonce" value={selectedBlock.nonce.toString()} />
+              <SummaryRow label="Minado" value={`${selectedBlock.mining_time_ms} ms`} />
+              <p className="break-all rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-600">
+                Evidencia: {selectedBlock.evidence_hash}
+              </p>
+              <p className="break-all rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-600">
+                Bloque: {selectedBlock.block_hash}
+              </p>
+            </div>
+          ) : (
+            <EmptyState text="Selecciona un bloque para revisar su evidencia." />
+          )}
+        </AnalyticsPanel>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <AnalyticsPanel title="Verificacion por remesa">
+          <div className="grid gap-3">
+            <TextInput label="ID interno de remesa" value={remittanceId} onChange={setRemittanceId} placeholder="Ej. 1" />
+            <button className="primary-button inline-flex items-center justify-center gap-2" type="button" onClick={verifyRemittance} disabled={isVerifying}>
+              <Search size={16} />
+              {isVerifying ? 'Verificando...' : 'Verificar evidencia'}
+            </button>
+          </div>
+          {verification ? (
+            <div className="mt-5 grid gap-3 md:grid-cols-3">
+              <Metric label="Estado" value={verification.status} />
+              <Metric label="Evidencias validas" value={verification.verified.toString()} />
+              <Metric label="Alertas" value={verification.mismatches.length.toString()} />
+            </div>
+          ) : null}
+          {history.length > 0 ? (
+            <div className="mt-5 space-y-3">
+              {history.map((block) => (
+                <div className="rounded-md border border-slate-200 bg-white p-3" key={block.block_index}>
+                  <p className="text-sm font-semibold text-fiducia-navy">#{block.block_index} · {blockchainEventLabel(block.event_type)}</p>
+                  <p className="mt-1 break-all font-mono text-xs text-slate-500">{shortHash(block.block_hash)}</p>
+                </div>
+              ))}
+            </div>
+          ) : null}
+        </AnalyticsPanel>
+
+        <AnalyticsPanel title="Integridad de cadena">
+          {isAdmin && validation ? (
+            <div className="space-y-3">
+              <SummaryRow label="Bloques revisados" value={validation.blocks_checked.toString()} />
+              <SummaryRow label="Resultado" value={validation.valid ? 'Cadena valida' : 'Inconsistencias detectadas'} />
+              {validation.errors.length > 0 ? (
+                <MiniList title="Alertas" items={validation.errors.map((item) => `Bloque #${item.block_index}: ${item.code}`)} />
+              ) : (
+                <EmptyState text="No se detectaron alteraciones en hashes, enlaces ni prueba de trabajo." />
+              )}
+            </div>
+          ) : (
+            <p className="text-sm leading-7 text-slate-600">
+              La validacion completa de la cadena esta reservada para administradores. Los analistas pueden consultar bloques,
+              historial y verificacion de remesas como evidencia de apoyo.
+            </p>
+          )}
+          <div className="mt-5 grid gap-3">
+            {['Evento operativo', 'Evidencia canonica', 'Hash SHA-256', 'Bloque enlazado', 'Verificacion'].map((step, index) => (
+              <div className="flex items-center gap-3 rounded-md border border-slate-200 bg-slate-50 p-3" key={step}>
+                <CheckCircle2 className="text-fiducia-teal" size={18} />
+                <span className="text-sm font-semibold text-fiducia-navy">{index + 1}. {step}</span>
+              </div>
+            ))}
+          </div>
         </AnalyticsPanel>
       </section>
     </div>
@@ -3397,6 +3659,22 @@ function formatRatio(value: number) {
 function formatNullableScore(value: string | number | null | undefined) {
   if (value === null || value === undefined) return 'N/D';
   return Number(value).toLocaleString('es-GT', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+}
+
+function shortHash(value: string | null | undefined) {
+  if (!value) return 'N/D';
+  return `${value.slice(0, 10)}...${value.slice(-8)}`;
+}
+
+function blockchainEventLabel(eventType: string) {
+  const labels: Record<string, string> = {
+    GENESIS: 'Genesis',
+    REMITTANCE_CREATED: 'Remesa creada',
+    RISK_ASSESSMENT_RECORDED: 'Riesgo registrado',
+    REMITTANCE_AVAILABLE: 'Remesa disponible',
+    REMITTANCE_COMPLETED: 'Remesa completada',
+  };
+  return labels[eventType] ?? eventType;
 }
 
 function formatDate(value: string) {
