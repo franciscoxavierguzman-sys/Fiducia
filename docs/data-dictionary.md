@@ -97,3 +97,19 @@ El dataset no contiene contrasenas, JWT, CVV, numeros completos de tarjeta, nume
 ## Uso en Fase 4
 
 Las features incluidas y excluidas para ML se documentan en `docs/phase4-ml-plan.md`. En particular, `rule_score`, `ml_probability`, `anomaly_score`, `final_risk_score`, `risk_band_experimental`, `status` y `completed_at` no se usan como features de entrenamiento para evitar leakage.
+
+## Variables Fase 7
+
+| Variable | Tipo | Descripcion |
+| --- | --- | --- |
+| total_remittances | integer | Conteo de remesas filtradas |
+| total_amount_usd_equivalent | decimal | Monto origen convertido a USD equivalente |
+| average_ticket_usd_equivalent | decimal nullable | Monto USD equivalente promedio por remesa |
+| total_commission_revenue_usd_equivalent | decimal | Comisiones historicas convertidas a USD equivalente |
+| average_commission_usd_equivalent | decimal nullable | Comision promedio por remesa |
+| active_clients | integer | Remitentes con actividad en el periodo |
+| active_corridors | integer | Pares origen-destino con actividad |
+| completion_rate | decimal nullable | Remesas completadas / remesas elegibles |
+| repeat_sender_rate | decimal nullable | Clientes activos con mas de una remesa / clientes activos |
+| risk_distribution | array | Distribucion agregada LOW, MEDIUM, HIGH desde risk_assessments |
+| forecast_outlook | object | Resumen de remittance-forecast-v1 para BI |
