@@ -1,0 +1,45 @@
+{
+  "generated_at": "2026-09-01T22:27:55.295023+00:00",
+  "files": {
+    "ml/artifacts/fraud_model.joblib": {
+      "exists": true,
+      "sha256": "b9aaf62ef719c1383abe82841872f4773bea3dd63923d6ced03aeaac14302626",
+      "size_bytes": 379277
+    },
+    "ml/artifacts/model_metadata.json": {
+      "exists": true,
+      "sha256": "33851613cb2c313ab7c2e1bd20cf8db73213180f51e10382785c78a248d4b907",
+      "size_bytes": 2911
+    },
+    "ml/artifacts/model_metrics.json": {
+      "exists": true,
+      "sha256": "98556adba0ddfbc585c2a170ceb1f38eeac5ecebd3dd75c47c6547011478db8c",
+      "size_bytes": 8237
+    },
+    "ml/artifacts/anomaly_model.joblib": {
+      "exists": true,
+      "sha256": "d46f5eb6fd14dbdd19cc7845ad0c404309d234e7d6f775728247166fd06debb7",
+      "size_bytes": 2734420
+    },
+    "ml/artifacts/anomaly_metadata.json": {
+      "exists": true,
+      "sha256": "b1dd41092b65798cee6151860ca765ca51fa32a683e3fd9d11ebf0e7d90e7d75",
+      "size_bytes": 2704
+    },
+    "ml/artifacts/risk_engine_metadata.json": {
+      "exists": true,
+      "sha256": "2d120414caba8e35d041530b08b286d54f709172c7784d7f73da76203ff704c6",
+      "size_bytes": 1179
+    },
+    "ml/artifacts/forecasting/forecast_metadata.json": {
+      "exists": true,
+      "sha256": "81fa02cba158633cab0feed1f3138a2d30bdd248a6330d6bc92cc9535bae506a",
+      "size_bytes": 8397
+    },
+    "ml/artifacts/forecasting/forecast_metrics.json": {
+      "exists": true,
+      "sha256": "f91540c2ecbf91730f562933cce0437ed8874a80e9034ef3055ecc847c0971de",
+      "size_bytes": 6195
+    }
+  }
+}

@@ -1,0 +1,125 @@
+{
+  "generated_at": "2026-09-01T22:22:32.928047+00:00",
+  "results": [
+    {
+      "scenario": "read-heavy-health",
+      "concurrency": 10,
+      "requests": 20,
+      "errors": 0,
+      "p50_ms": 13.65,
+      "p95_ms": 18.71,
+      "max_ms": 18.96,
+      "average_ms": 14.2
+    },
+    {
+      "scenario": "remittance-read",
+      "concurrency": 10,
+      "requests": 20,
+      "errors": 0,
+      "p50_ms": 34.38,
+      "p95_ms": 48.71,
+      "max_ms": 49.68,
+      "average_ms": 36.22
+    },
+    {
+      "scenario": "bi-read",
+      "concurrency": 10,
+      "requests": 20,
+      "errors": 0,
+      "p50_ms": 32.03,
+      "p95_ms": 42.37,
+      "max_ms": 43.98,
+      "average_ms": 33.28
+    },
+    {
+      "scenario": "assistant-deterministic",
+      "concurrency": 10,
+      "requests": 20,
+      "errors": 0,
+      "p50_ms": 488.7,
+      "p95_ms": 1764.8,
+      "max_ms": 1873.09,
+      "average_ms": 731.76
+    },
+    {
+      "scenario": "read-heavy-health",
+      "concurrency": 25,
+      "requests": 50,
+      "errors": 0,
+      "p50_ms": 37.09,
+      "p95_ms": 49.21,
+      "max_ms": 54.31,
+      "average_ms": 36.11
+    },
+    {
+      "scenario": "remittance-read",
+      "concurrency": 25,
+      "requests": 50,
+      "errors": 0,
+      "p50_ms": 100.95,
+      "p95_ms": 131.64,
+      "max_ms": 139.88,
+      "average_ms": 93.99
+    },
+    {
+      "scenario": "bi-read",
+      "concurrency": 25,
+      "requests": 50,
+      "errors": 0,
+      "p50_ms": 55.93,
+      "p95_ms": 78.86,
+      "max_ms": 87.3,
+      "average_ms": 59.55
+    },
+    {
+      "scenario": "assistant-deterministic",
+      "concurrency": 25,
+      "requests": 50,
+      "errors": 0,
+      "p50_ms": 394.28,
+      "p95_ms": 2278.39,
+      "max_ms": 2565.47,
+      "average_ms": 842.62
+    },
+    {
+      "scenario": "read-heavy-health",
+      "concurrency": 50,
+      "requests": 100,
+      "errors": 0,
+      "p50_ms": 36.77,
+      "p95_ms": 49.82,
+      "max_ms": 59.58,
+      "average_ms": 32.36
+    },
+    {
+      "scenario": "remittance-read",
+      "concurrency": 50,
+      "requests": 100,
+      "errors": 0,
+      "p50_ms": 140.17,
+      "p95_ms": 281.85,
+      "max_ms": 319.32,
+      "average_ms": 153.55
+    },
+    {
+      "scenario": "bi-read",
+      "concurrency": 50,
+      "requests": 100,
+      "errors": 0,
+      "p50_ms": 112.0,
+      "p95_ms": 223.28,
+      "max_ms": 258.87,
+      "average_ms": 120.74
+    },
+    {
+      "scenario": "assistant-deterministic",
+      "concurrency": 50,
+      "requests": 100,
+      "errors": 0,
+      "p50_ms": 2974.65,
+      "p95_ms": 7736.08,
+      "max_ms": 9277.11,
+      "average_ms": 3348.91
+    }
+  ]
+}

@@ -12,7 +12,7 @@ if settings.database_url.startswith("sqlite:///"):
     if db_path and db_path != ":memory:":
         Path(db_path).parent.mkdir(parents=True, exist_ok=True)
 
-connect_args = {"check_same_thread": False} if settings.database_url.startswith("sqlite") else {}
+connect_args = {"check_same_thread": False, "timeout": 30} if settings.database_url.startswith("sqlite") else {}
 engine_kwargs = {"connect_args": connect_args}
 if settings.database_url == "sqlite:///:memory:":
     engine_kwargs["poolclass"] = StaticPool

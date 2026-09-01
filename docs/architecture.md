@@ -154,3 +154,35 @@ Usuario autenticado
 ```
 
 El asistente no es fuente paralela de verdad. Consulta remesas, BI, forecasting, riesgo y blockchain mediante servicios existentes. No crea pagos, no modifica scores y no toma decisiones de riesgo.
+
+## Arquitectura final Fase 10
+
+```text
+CLIENT / ADMIN / RISK_ANALYST
+        |
+        v
+Frontend React
+        |
+        v
+FastAPI /api/v1
+        |
+        +-- Auth
+        +-- Remittances
+        +-- Beneficiaries
+        +-- Funding sources
+        +-- Risk Engine
+        +-- Forecasting
+        +-- Business Intelligence
+        +-- Blockchain
+        +-- Assistant
+        +-- System
+        +-- Audit
+        |
+        v
+SQLAlchemy
+        |
+        v
+SQLite local / futura migracion PostgreSQL
+```
+
+Los artefactos ML se consumen desde `ml/artifacts` y permanecen congelados en Fase 10. La observabilidad agrega `X-Request-ID`, logs tecnicos, headers HTTP basicos y metricas in-process para demo local.

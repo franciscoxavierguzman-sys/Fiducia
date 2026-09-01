@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Request, status
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -6,6 +6,7 @@ from app.db.session import get_db
 from app.models.country import Country
 from app.repositories.users import create_user, get_user_by_email
 from app.schemas.auth import LoginRequest, TokenResponse
+from app.core.rate_limit import client_rate_key, rate_limiter
 from app.schemas.user import UserCreate, UserRead
 from app.security.passwords import verify_password
 from app.security.tokens import create_access_token
@@ -57,7 +58,8 @@ def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserRead:
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(payload: LoginRequest, db: Session = Depends(get_db)) -> TokenResponse:
+def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)) -> TokenResponse:
+    rate_limiter.check(client_rate_key(request, f"login:{payload.email.lower()}"), limit=12, window_seconds=60)
     user = get_user_by_email(db, payload.email)
     if user is None or not verify_password(payload.password, user.password_hash):
         raise HTTPException(

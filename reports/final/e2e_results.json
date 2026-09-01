@@ -1,0 +1,80 @@
+{
+  "generated_at": "2026-09-01T22:20:20.539416+00:00",
+  "total": 12,
+  "passed": 12,
+  "failed": 0,
+  "results": [
+    {
+      "name": "CLIENT read own transactions",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "CLIENT read tracking",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "CLIENT blockchain own evidence",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "CLIENT assistant own status",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "CLIENT BI denied",
+      "status_code": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "name": "CLIENT risk denied",
+      "status_code": 403,
+      "expected": 403,
+      "passed": true
+    },
+    {
+      "name": "RISK dashboard",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "RISK forecast",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "RISK assistant",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "ADMIN system info",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "ADMIN BI overview",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    },
+    {
+      "name": "ADMIN blockchain validate",
+      "status_code": 200,
+      "expected": 200,
+      "passed": true
+    }
+  ]
+}

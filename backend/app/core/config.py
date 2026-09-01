@@ -9,6 +9,7 @@ PROJECT_ROOT = Path(__file__).resolve().parents[3]
 
 class Settings(BaseSettings):
     app_name: str = "FIDUCIA"
+    app_version: str = "1.0.0"
     environment: str = "development"
     api_v1_prefix: str = "/api/v1"
     database_url: str = f"sqlite:///{(PROJECT_ROOT / 'database' / 'fiducia.db').as_posix()}"

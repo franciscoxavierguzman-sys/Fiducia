@@ -1,0 +1,49 @@
+{
+  "generated_at": "2026-09-01T22:24:00-06:00",
+  "initial_backend": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest",
+    "passed": 82,
+    "failed": 0,
+    "duration": "63.02s"
+  },
+  "phase10_targeted": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_phase10_final_hardening.py -q",
+    "passed": 5,
+    "failed": 0
+  },
+  "frontend_initial_build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "modules_transformed": 1665,
+    "duration": "7.31s"
+  },
+  "final_validation": {
+    "command": ".\\.venv\\Scripts\\python.exe ..\\scripts\\final_validation.py",
+    "status": "PASS",
+    "health": 200,
+    "ready": 200
+  },
+  "final_e2e": {
+    "command": ".\\.venv\\Scripts\\python.exe ..\\scripts\\run_final_e2e.py",
+    "passed": 12,
+    "failed": 0
+  },
+  "load_test": {
+    "command": ".\\.venv\\Scripts\\python.exe ..\\scripts\\load_test.py",
+    "status": "PASS",
+    "scenarios": 12,
+    "errors": 0
+  },
+  "final_backend": {
+    "command": ".\\.venv\\Scripts\\python.exe -m pytest",
+    "passed": 87,
+    "failed": 0,
+    "duration": "77.10s"
+  },
+  "final_frontend_build": {
+    "command": "npm run build",
+    "status": "PASS",
+    "modules_transformed": 1665,
+    "duration": "6.61s"
+  }
+}

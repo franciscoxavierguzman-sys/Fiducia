@@ -1,17 +1,21 @@
 # Seguridad y privacidad
 
-La Fase 1 implementa controles proporcionales a un prototipo academico:
+FIDUCIA implementa controles proporcionales a un prototipo local integrado:
 
 - contrasenas hasheadas con bcrypt;
 - autenticacion con JWT;
-- roles base: `sender`, `risk_analyst`, `admin`;
+- roles base: `CLIENT`, `RISK_ANALYST`, `ADMIN`;
 - endpoints protegidos mediante bearer token;
 - validacion de entrada con Pydantic;
 - configuracion sensible mediante variables de entorno.
+- request ID por request;
+- headers HTTP basicos;
+- rate limiting in-process para login y asistente;
+- auditoria de eventos relevantes.
 
 ## Limitaciones
 
-FIDUCIA no implementa aun rate limiting, rotacion de secretos, auditoria completa ni politicas avanzadas de sesion. Estos controles quedan para fases posteriores de hardening.
+FIDUCIA no implementa rotacion automatica de secretos, gestor productivo de secretos, rate limiting distribuido, politicas avanzadas de sesion ni monitoreo externo. Estos controles quedan documentados como mejoras futuras.
 
 ## Privacidad
 

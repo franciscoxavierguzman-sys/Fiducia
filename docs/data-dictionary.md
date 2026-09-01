@@ -149,3 +149,12 @@ La idempotencia de riesgo usa `risk_assessment_id` como identidad estable para p
 | assistant.conversation.user_id | integer | Propietario de la conversacion |
 
 El contexto enviado al provider se minimiza por intent y rol. No incluye password, JWT, datos completos de tarjeta, CVV, documentos ni detalles bancarios innecesarios.
+
+## Variables Fase 10
+
+| Variable | Tipo | Descripcion | Fuente | Uso |
+|---|---|---|---|---|
+| request_id | string | Identificador de correlacion HTTP | Middleware | Diagnostico |
+| app_version | string | Version final del sistema | `app/core/version.py` | Health, system info |
+| request_duration_ms | decimal | Duracion de request | Middleware | Observabilidad local |
+| rate_limited | boolean | Indica exceso de intentos | Rate limiter | Hardening login/asistente |
