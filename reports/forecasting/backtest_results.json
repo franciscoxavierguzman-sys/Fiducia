@@ -1,0 +1,197 @@
+{
+  "version": "remittance-forecast-v1",
+  "split_strategy": "chronological train/validation/test",
+  "selection_rule": "selected by validation WAPE, with TEST used only once for final reporting",
+  "targets": {
+    "transaction_count": {
+      "selected_model": "Moving Average 8",
+      "comparison": [
+        {
+          "model": "Naive",
+          "complexity": "baseline",
+          "training_time_seconds": 0.0006,
+          "validation": {
+            "mae": 10.25,
+            "rmse": 14.274102423620198,
+            "wape": 0.08161911081619111,
+            "smape": 0.07978026796618058
+          },
+          "test": {
+            "mae": 17.333333333333332,
+            "rmse": 23.355941428253324,
+            "wape": 0.1370223978919631,
+            "smape": 0.14220712657552112
+          },
+          "selected": false
+        },
+        {
+          "model": "Seasonal Naive",
+          "complexity": "baseline",
+          "training_time_seconds": 0.0002,
+          "validation": {
+            "mae": 11.25,
+            "rmse": 15.041608956491324,
+            "wape": 0.08958195089581951,
+            "smape": 0.08776962323927819
+          },
+          "test": {
+            "mae": 17.0,
+            "rmse": 21.083168642308014,
+            "wape": 0.13438735177865613,
+            "smape": 0.1397986748979995
+          },
+          "selected": false
+        },
+        {
+          "model": "Moving Average 4",
+          "complexity": "statistical_baseline",
+          "training_time_seconds": 0.0003,
+          "validation": {
+            "mae": 8.4375,
+            "rmse": 10.081697525714606,
+            "wape": 0.06718646317186464,
+            "smape": 0.06621751740423722
+          },
+          "test": {
+            "mae": 13.895833333333334,
+            "rmse": 19.382525420250754,
+            "wape": 0.10984848484848485,
+            "smape": 0.11511345541018027
+          },
+          "selected": false
+        },
+        {
+          "model": "Moving Average 8",
+          "complexity": "statistical_baseline",
+          "training_time_seconds": 0.0003,
+          "validation": {
+            "mae": 7.572916666666667,
+            "rmse": 9.109504537386579,
+            "wape": 0.060301924353019246,
+            "smape": 0.059440654097390334
+          },
+          "test": {
+            "mae": 13.885416666666666,
+            "rmse": 19.615675863536627,
+            "wape": 0.109766139657444,
+            "smape": 0.11528094524758803
+          },
+          "selected": true
+        },
+        {
+          "model": "HistGradientBoosting",
+          "complexity": "simple_ml",
+          "training_time_seconds": 0.8741,
+          "validation": {
+            "mae": 11.058875167328635,
+            "rmse": 11.646970468722788,
+            "wape": 0.0880600544180117,
+            "smape": 0.08595549935989712
+          },
+          "test": {
+            "mae": 13.052569968919727,
+            "rmse": 18.10882655262569,
+            "wape": 0.10318237129580812,
+            "smape": 0.10880889922528018
+          },
+          "selected": false
+        }
+      ]
+    },
+    "transaction_amount_usd": {
+      "selected_model": "Moving Average 8",
+      "comparison": [
+        {
+          "model": "Naive",
+          "complexity": "baseline",
+          "training_time_seconds": 0.0007,
+          "validation": {
+            "mae": 2594.138333333334,
+            "rmse": 3071.8575380785483,
+            "wape": 0.10198934470000015,
+            "smape": 0.1034946106381397
+          },
+          "test": {
+            "mae": 5649.482500000001,
+            "rmse": 6143.5107361446835,
+            "wape": 0.22848712133005708,
+            "smape": 0.22915604932355213
+          },
+          "selected": false
+        },
+        {
+          "model": "Seasonal Naive",
+          "complexity": "baseline",
+          "training_time_seconds": 0.0005,
+          "validation": {
+            "mae": 2294.2691666666665,
+            "rmse": 2941.5828323724513,
+            "wape": 0.09019989638450869,
+            "smape": 0.0938495168385688
+          },
+          "test": {
+            "mae": 4525.284999999999,
+            "rmse": 5921.953416151351,
+            "wape": 0.18302018686633456,
+            "smape": 0.18618474838670077
+          },
+          "selected": false
+        },
+        {
+          "model": "Moving Average 4",
+          "complexity": "statistical_baseline",
+          "training_time_seconds": 0.0007,
+          "validation": {
+            "mae": 1645.1154166666672,
+            "rmse": 2051.2144761407,
+            "wape": 0.06467821748199026,
+            "smape": 0.06501336274710803
+          },
+          "test": {
+            "mae": 4701.140833333332,
+            "rmse": 5543.896366212782,
+            "wape": 0.1901324831036327,
+            "smape": 0.192929572415225
+          },
+          "selected": false
+        },
+        {
+          "model": "Moving Average 8",
+          "complexity": "statistical_baseline",
+          "training_time_seconds": 0.0007,
+          "validation": {
+            "mae": 1511.8940624999998,
+            "rmse": 1781.0708910845237,
+            "wape": 0.059440579058118614,
+            "smape": 0.059732077071557386
+          },
+          "test": {
+            "mae": 4022.901874999998,
+            "rmse": 4961.805776059035,
+            "wape": 0.1627018525700431,
+            "smape": 0.1665597279802171
+          },
+          "selected": true
+        },
+        {
+          "model": "HistGradientBoosting",
+          "complexity": "simple_ml",
+          "training_time_seconds": 0.8564,
+          "validation": {
+            "mae": 1935.6554665669794,
+            "rmse": 2547.0434500533042,
+            "wape": 0.07610088870876429,
+            "smape": 0.07514486964899346
+          },
+          "test": {
+            "mae": 3784.924256905598,
+            "rmse": 4811.601442834555,
+            "wape": 0.15307710890557946,
+            "smape": 0.15656430131346372
+          },
+          "selected": false
+        }
+      ]
+    }
+  }
+}

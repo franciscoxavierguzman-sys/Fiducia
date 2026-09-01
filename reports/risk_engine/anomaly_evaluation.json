@@ -1,0 +1,86 @@
+{
+  "algorithm": "IsolationForest",
+  "version": "anomaly-model-v1",
+  "trained_at": "2026-08-31T16:12:30.014766+00:00",
+  "features": [
+    "source_amount",
+    "amount_vs_user_average",
+    "transaction_velocity_24h",
+    "transaction_velocity_7d",
+    "transactions_last_30d",
+    "beneficiary_age_days",
+    "country_diversity_30d",
+    "failed_transaction_ratio",
+    "historical_avg_amount",
+    "historical_max_amount",
+    "transaction_hour",
+    "weekend_flag",
+    "new_beneficiary_flag",
+    "new_corridor_flag",
+    "origin_country",
+    "destination_country",
+    "source_currency",
+    "destination_currency",
+    "delivery_method",
+    "funding_method",
+    "relationship"
+  ],
+  "excluded_from_training": [
+    "fraud_label",
+    "ml_probability",
+    "rule_score",
+    "final_risk_score"
+  ],
+  "dataset": "C:\\Users\\Javier Guzman\\Documents\\Codex\\2026-08-26\\files-pasted-by-the-user-prompt\\data\\processed\\remittances_analytics.csv",
+  "dataset_hash": "18c3b07edae88d373e0e50169015267a975c50a3315f7f919f6505f4147f2a27",
+  "seed": 42,
+  "normalization_method": "score = clip((p99_train_decision - decision_score) / (p99 - p1) * 100, 0, 100)",
+  "calibration": {
+    "lower_decision_score": -0.015665217388088577,
+    "upper_decision_score": 0.08193825820090768
+  },
+  "parameters": {
+    "n_estimators": 160,
+    "contamination": 0.04,
+    "random_state": 42
+  },
+  "split": {
+    "train": 7000,
+    "validation": 1500,
+    "test": 1500,
+    "strategy": "stratified 70/15/15"
+  },
+  "evaluation_note": "fraud_label se usa solo para evaluacion posterior, no para entrenamiento.",
+  "validation": {
+    "percentiles": {
+      "1": 0.0,
+      "5": 6.151278454839251,
+      "25": 25.14637805746636,
+      "50": 39.73801596220703,
+      "75": 55.88225865299998,
+      "95": 78.36597645056574,
+      "99": 96.72597399155157
+    },
+    "normal_mean_score": 40.42371351965164,
+    "fraud_label_mean_score": 53.098332719420725,
+    "roc_auc_against_fraud_label": 0.6544573765335011,
+    "pr_auc_against_fraud_label": 0.07822894958571426,
+    "extreme_examples_threshold_p95": 78.36597645056574
+  },
+  "test": {
+    "percentiles": {
+      "1": 0.0,
+      "5": 6.363066115022288,
+      "25": 24.449843330728793,
+      "50": 39.644482936867135,
+      "75": 56.397095281871835,
+      "95": 80.27153714214349,
+      "99": 97.58510534495812
+    },
+    "normal_mean_score": 40.73730494580145,
+    "fraud_label_mean_score": 53.59115257072484,
+    "roc_auc_against_fraud_label": 0.652859389745203,
+    "pr_auc_against_fraud_label": 0.08121836524422418,
+    "extreme_examples_threshold_p95": 80.27153714214349
+  }
+}

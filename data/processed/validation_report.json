@@ -1,0 +1,13 @@
+{
+  "record_count": 10000,
+  "valid": true,
+  "error_count": 0,
+  "warning_count": 0,
+  "errors": [],
+  "warnings": [],
+  "fraud_label_count": 368,
+  "synthetic_path": "C:\\Users\\Javier Guzman\\Documents\\Codex\\2026-08-26\\files-pasted-by-the-user-prompt\\data\\synthetic\\remittances_synthetic.csv",
+  "processed_path": "C:\\Users\\Javier Guzman\\Documents\\Codex\\2026-08-26\\files-pasted-by-the-user-prompt\\data\\processed\\remittances_analytics.csv",
+  "records_requested": 10000,
+  "seed": 42
+}

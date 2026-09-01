@@ -1,0 +1,152 @@
+{
+  "total_remittances": 10000,
+  "total_volume": "3597811.87",
+  "total_commission": "97295.29",
+  "average_amount": "359.78",
+  "top_corridor": "Estados Unidos -> Mexico",
+  "status_distribution": {
+    "AVAILABLE": 1660,
+    "COMPLETED": 6762,
+    "REVIEW_REQUIRED": 484,
+    "PROCESSING": 948,
+    "REJECTED": 146
+  },
+  "top_corridors": {
+    "Estados Unidos -> Mexico": 891,
+    "Guatemala -> Mexico": 836,
+    "Guatemala -> Espana": 820,
+    "Estados Unidos -> Guatemala": 809,
+    "Estados Unidos -> Canada": 766,
+    "Guatemala -> Estados Unidos": 759,
+    "Estados Unidos -> Espana": 752,
+    "Guatemala -> Canada": 739,
+    "Mexico -> Guatemala": 449,
+    "Mexico -> Espana": 423
+  },
+  "origin_countries": {
+    "Guatemala": 3154,
+    "Estados Unidos": 3218,
+    "Espana": 1083,
+    "Canada": 911,
+    "Mexico": 1634
+  },
+  "destination_countries": {
+    "Espana": 2223,
+    "Mexico": 2231,
+    "Canada": 2074,
+    "Estados Unidos": 1680,
+    "Guatemala": 1792
+  },
+  "currencies": {
+    "GTQ": 3154,
+    "USD": 3218,
+    "EUR": 1083,
+    "CAD": 911,
+    "MXN": 1634
+  },
+  "funding_methods": {
+    "DIGITAL_WALLET": 3386,
+    "DEBIT_CARD": 3303,
+    "BANK_TRANSFER": 3311
+  },
+  "delivery_methods": {
+    "BANK_DEPOSIT": 2485,
+    "WALLET": 2496,
+    "TRANSFER": 2525,
+    "CASH_PICKUP": 2494
+  },
+  "fraud_label_count": 368,
+  "fraud_label_rate": "0.036800",
+  "over_time": [
+    {
+      "period": "2025-03",
+      "count": "443",
+      "volume": "178312.17"
+    },
+    {
+      "period": "2025-04",
+      "count": "543",
+      "volume": "184143.03"
+    },
+    {
+      "period": "2025-05",
+      "count": "580",
+      "volume": "219343.37"
+    },
+    {
+      "period": "2025-06",
+      "count": "615",
+      "volume": "213960.47"
+    },
+    {
+      "period": "2025-07",
+      "count": "573",
+      "volume": "210168.48"
+    },
+    {
+      "period": "2025-08",
+      "count": "532",
+      "volume": "200593.89"
+    },
+    {
+      "period": "2025-09",
+      "count": "585",
+      "volume": "215438.18"
+    },
+    {
+      "period": "2025-10",
+      "count": "564",
+      "volume": "204717.86"
+    },
+    {
+      "period": "2025-11",
+      "count": "575",
+      "volume": "191409.60"
+    },
+    {
+      "period": "2025-12",
+      "count": "570",
+      "volume": "186198.25"
+    },
+    {
+      "period": "2026-01",
+      "count": "620",
+      "volume": "225573.92"
+    },
+    {
+      "period": "2026-02",
+      "count": "501",
+      "volume": "193125.24"
+    },
+    {
+      "period": "2026-03",
+      "count": "560",
+      "volume": "196565.69"
+    },
+    {
+      "period": "2026-04",
+      "count": "541",
+      "volume": "195984.15"
+    },
+    {
+      "period": "2026-05",
+      "count": "559",
+      "volume": "202078.91"
+    },
+    {
+      "period": "2026-06",
+      "count": "527",
+      "volume": "191749.53"
+    },
+    {
+      "period": "2026-07",
+      "count": "588",
+      "volume": "192790.32"
+    },
+    {
+      "period": "2026-08",
+      "count": "524",
+      "volume": "195658.81"
+    }
+  ]
+}

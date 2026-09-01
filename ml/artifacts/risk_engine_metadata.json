@@ -1,0 +1,37 @@
+{
+  "version": "risk-engine-v1.1",
+  "created_at": "2026-08-31T15:56:12+00:00",
+  "updated_at": "2026-08-31T16:30:00+00:00",
+  "rules_version": "rules-v1",
+  "ml_model_version": "fraud-model-v1",
+  "ml_threshold": 0.25,
+  "anomaly_model_version": "anomaly-model-v1",
+  "aggregation_strategy": "weighted_available_signals_v1",
+  "weights": {
+    "rules": 0.3,
+    "ml": 0.5,
+    "anomaly": 0.2
+  },
+  "weights_status": "baseline heuristico inicial",
+  "risk_band_thresholds": {
+    "medium": 25.0,
+    "high": 40.0
+  },
+  "previous_risk_band_thresholds": {
+    "medium": 25.0,
+    "high": 50.0
+  },
+  "bands_status": "thresholds operativos de Decision Support",
+  "recommended_actions": {
+    "LOW": "CONTINUE",
+    "MEDIUM": "REVIEW",
+    "HIGH": "MANUAL_REVIEW"
+  },
+  "methodology": "Pesos mantenidos como baseline heuristico inicial. HIGH >= 40 autorizado como threshold operativo para aumentar sensibilidad de revision humana sin modificar ML.",
+  "limitations": [
+    "Datos sinteticos.",
+    "No realiza decisiones regulatorias.",
+    "No bloquea remesas automaticamente.",
+    "Si una senal no esta disponible, se marca como unavailable y no se sustituye con cero."
+  ]
+}

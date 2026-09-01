@@ -1,0 +1,339 @@
+{
+  "comparison": [
+    {
+      "model": "Dummy",
+      "algorithm": "DummyClassifier",
+      "training_time_seconds": 0.0493,
+      "threshold": 0.5,
+      "validation": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "pr_auc": 0.03666666666666667,
+        "brier_score": 0.03532225850340136,
+        "threshold": 0.5,
+        "confusion_matrix": [
+          [
+            1445,
+            0
+          ],
+          [
+            55,
+            0
+          ]
+        ]
+      },
+      "test": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "roc_auc": 0.5,
+        "pr_auc": 0.03666666666666667,
+        "brier_score": 0.035322258503401364,
+        "threshold": 0.5,
+        "confusion_matrix": [
+          [
+            1445,
+            0
+          ],
+          [
+            55,
+            0
+          ]
+        ]
+      }
+    },
+    {
+      "model": "Logistic Regression",
+      "algorithm": "LogisticRegression",
+      "training_time_seconds": 0.0702,
+      "threshold": 0.55,
+      "validation": {
+        "precision": 0.1542056074766355,
+        "recall": 0.6,
+        "f1": 0.24535315985130113,
+        "roc_auc": 0.754564328405159,
+        "pr_auc": 0.3706241283822657,
+        "brier_score": 0.15057779168167978,
+        "threshold": 0.55,
+        "confusion_matrix": [
+          [
+            1264,
+            181
+          ],
+          [
+            22,
+            33
+          ]
+        ]
+      },
+      "test": {
+        "precision": 0.1650485436893204,
+        "recall": 0.6181818181818182,
+        "f1": 0.26053639846743293,
+        "roc_auc": 0.7930418370556779,
+        "pr_auc": 0.4309833764383833,
+        "brier_score": 0.1479563767423254,
+        "threshold": 0.55,
+        "confusion_matrix": [
+          [
+            1273,
+            172
+          ],
+          [
+            21,
+            34
+          ]
+        ]
+      }
+    },
+    {
+      "model": "Random Forest",
+      "algorithm": "RandomForestClassifier",
+      "training_time_seconds": 0.3977,
+      "threshold": 0.4,
+      "validation": {
+        "precision": 0.20754716981132076,
+        "recall": 0.6,
+        "f1": 0.308411214953271,
+        "roc_auc": 0.772255426234665,
+        "pr_auc": 0.39174499952219516,
+        "brier_score": 0.09573551054603467,
+        "threshold": 0.4,
+        "confusion_matrix": [
+          [
+            1319,
+            126
+          ],
+          [
+            22,
+            33
+          ]
+        ]
+      },
+      "test": {
+        "precision": 0.1910828025477707,
+        "recall": 0.5454545454545454,
+        "f1": 0.2830188679245283,
+        "roc_auc": 0.8047813777917584,
+        "pr_auc": 0.41750016376869986,
+        "brier_score": 0.0949379019941824,
+        "threshold": 0.4,
+        "confusion_matrix": [
+          [
+            1318,
+            127
+          ],
+          [
+            25,
+            30
+          ]
+        ]
+      }
+    },
+    {
+      "model": "Gradient Boosting",
+      "algorithm": "HistGradientBoostingClassifier",
+      "training_time_seconds": 0.7,
+      "threshold": 0.25,
+      "validation": {
+        "precision": 0.6285714285714286,
+        "recall": 0.4,
+        "f1": 0.4888888888888889,
+        "roc_auc": 0.7702673796791444,
+        "pr_auc": 0.44761337325369394,
+        "brier_score": 0.025999567769798147,
+        "threshold": 0.25,
+        "confusion_matrix": [
+          [
+            1432,
+            13
+          ],
+          [
+            33,
+            22
+          ]
+        ],
+        "tp": 22,
+        "tn": 1432,
+        "fp": 13,
+        "fn": 33
+      },
+      "test": {
+        "precision": 0.6285714285714286,
+        "recall": 0.4,
+        "f1": 0.4888888888888889,
+        "roc_auc": 0.8116137150047185,
+        "pr_auc": 0.4728438091200872,
+        "brier_score": 0.02490677710888675,
+        "threshold": 0.25,
+        "confusion_matrix": [
+          [
+            1432,
+            13
+          ],
+          [
+            33,
+            22
+          ]
+        ],
+        "tp": 22,
+        "tn": 1432,
+        "fp": 13,
+        "fn": 33
+      }
+    }
+  ],
+  "selected_model": "Gradient Boosting",
+  "feature_importance": [
+    {
+      "feature": "failed_transactions",
+      "importance": 0.176147777813476,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "amount_vs_user_average",
+      "importance": 0.15646956141455007,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "max_transaction_amount",
+      "importance": 0.09368000608774409,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "failed_transaction_ratio",
+      "importance": 0.09230757917527274,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "commission_amount",
+      "importance": 0.0669468081320352,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "source_amount",
+      "importance": 0.03761845194737952,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "avg_transaction_amount",
+      "importance": 0.03080416805195213,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "transaction_count",
+      "importance": 0.019523068887048543,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "account_age_days",
+      "importance": -0.012098727466555648,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "commission_rate",
+      "importance": 0.011521341569360665,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "destination_amount",
+      "importance": 0.008947662847524417,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "beneficiary_age_days",
+      "importance": -0.006524228690838518,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "amount_bucket",
+      "importance": 0.005537966418268358,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "total_debit_amount",
+      "importance": -0.005497013311302856,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "delivery_method",
+      "importance": 0.003596159748295513,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "relationship",
+      "importance": 0.0027765509098312434,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "destination_country",
+      "importance": 0.002659279904538203,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "funding_method",
+      "importance": 0.0024844022724784254,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "exchange_rate",
+      "importance": -0.0019186594427972436,
+      "method": "permutation_importance"
+    },
+    {
+      "feature": "linked_user",
+      "importance": -0.0019077130734646674,
+      "method": "permutation_importance"
+    }
+  ],
+  "operational_threshold": 0.25,
+  "threshold_selection": "Selected on validation set; no retraining performed.",
+  "selected_model_validation_at_operational_threshold": {
+    "precision": 0.6285714285714286,
+    "recall": 0.4,
+    "f1": 0.4888888888888889,
+    "roc_auc": 0.7702673796791444,
+    "pr_auc": 0.44761337325369394,
+    "brier_score": 0.025999567769798147,
+    "threshold": 0.25,
+    "confusion_matrix": [
+      [
+        1432,
+        13
+      ],
+      [
+        33,
+        22
+      ]
+    ],
+    "tp": 22,
+    "tn": 1432,
+    "fp": 13,
+    "fn": 33
+  },
+  "selected_model_test_at_operational_threshold": {
+    "precision": 0.6285714285714286,
+    "recall": 0.4,
+    "f1": 0.4888888888888889,
+    "roc_auc": 0.8116137150047185,
+    "pr_auc": 0.4728438091200872,
+    "brier_score": 0.02490677710888675,
+    "threshold": 0.25,
+    "confusion_matrix": [
+      [
+        1432,
+        13
+      ],
+      [
+        33,
+        22
+      ]
+    ],
+    "tp": 22,
+    "tn": 1432,
+    "fp": 13,
+    "fn": 33
+  }
+}

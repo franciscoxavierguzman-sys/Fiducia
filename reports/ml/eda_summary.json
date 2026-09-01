@@ -1,0 +1,145 @@
+{
+  "records": 10000,
+  "target_distribution": {
+    "0": 9632,
+    "1": 368
+  },
+  "target_rate": {
+    "0": 0.9632,
+    "1": 0.0368
+  },
+  "numeric_summary": {
+    "source_amount": {
+      "count": 10000.0,
+      "mean": 359.7812,
+      "std": 376.6431,
+      "min": 19.81,
+      "25%": 158.37,
+      "50%": 257.525,
+      "75%": 428.18,
+      "max": 5000.0
+    },
+    "destination_amount": {
+      "count": 10000.0,
+      "mean": 1464.9607,
+      "std": 3621.1527,
+      "min": 1.43,
+      "25%": 41.385,
+      "50%": 237.365,
+      "75%": 1271.2375,
+      "max": 90365.96
+    },
+    "commission_amount": {
+      "count": 10000.0,
+      "mean": 9.7295,
+      "std": 10.6721,
+      "min": 0.52,
+      "25%": 4.14,
+      "50%": 6.85,
+      "75%": 11.56,
+      "max": 177.57
+    },
+    "transaction_hour": {
+      "count": 10000.0,
+      "mean": 12.5653,
+      "std": 6.579,
+      "min": 0.0,
+      "25%": 8.0,
+      "50%": 13.0,
+      "75%": 18.0,
+      "max": 23.0
+    },
+    "beneficiary_age_days": {
+      "count": 10000.0,
+      "mean": 98.6806,
+      "std": 129.2901,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 25.0,
+      "75%": 177.0,
+      "max": 531.0
+    },
+    "transaction_velocity_24h": {
+      "count": 10000.0,
+      "mean": 2.068,
+      "std": 2.306,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 1.0,
+      "75%": 3.0,
+      "max": 15.0
+    },
+    "transaction_velocity_7d": {
+      "count": 10000.0,
+      "mean": 1.4068,
+      "std": 1.5977,
+      "min": 0.0,
+      "25%": 0.0,
+      "50%": 1.0,
+      "75%": 2.0,
+      "max": 14.0
+    },
+    "amount_vs_user_average": {
+      "count": 10000.0,
+      "mean": 1.2498,
+      "std": 1.4398,
+      "min": 0.02,
+      "25%": 0.51,
+      "50%": 0.96,
+      "75%": 1.38,
+      "max": 30.75
+    }
+  },
+  "means_by_target": {
+    "source_amount": {
+      "0": 331.6709,
+      "1": 1095.5368
+    },
+    "destination_amount": {
+      "0": 1328.8631,
+      "1": 5027.1674
+    },
+    "commission_amount": {
+      "0": 8.9399,
+      "1": 30.3962
+    },
+    "beneficiary_age_days": {
+      "0": 98.5729,
+      "1": 101.5
+    },
+    "transaction_velocity_24h": {
+      "0": 2.0705,
+      "1": 2.0027
+    }
+  },
+  "top_corridors": {
+    "Estados Unidos -> Mexico": 891,
+    "Guatemala -> Mexico": 836,
+    "Guatemala -> Espana": 820,
+    "Estados Unidos -> Guatemala": 809,
+    "Estados Unidos -> Canada": 766,
+    "Guatemala -> Estados Unidos": 759,
+    "Estados Unidos -> Espana": 752,
+    "Guatemala -> Canada": 739,
+    "Mexico -> Guatemala": 449,
+    "Mexico -> Espana": 423
+  },
+  "funding_methods": {
+    "DIGITAL_WALLET": 3386,
+    "BANK_TRANSFER": 3311,
+    "DEBIT_CARD": 3303
+  },
+  "delivery_methods": {
+    "TRANSFER": 2525,
+    "WALLET": 2496,
+    "CASH_PICKUP": 2494,
+    "BANK_DEPOSIT": 2485
+  },
+  "currencies": {
+    "USD": 3218,
+    "GTQ": 3154,
+    "MXN": 1634,
+    "EUR": 1083,
+    "CAD": 911
+  }
+}

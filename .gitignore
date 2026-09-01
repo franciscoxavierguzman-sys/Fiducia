@@ -1,0 +1,52 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Node / Vite
+node_modules/
+dist/
+.vite/
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# SQLite runtime files
+*.db-journal
+*.sqlite-journal
+*.sqlite-shm
+*.sqlite-wal
+
+# Temporary files
+*.tmp
+*.temp
+~$*
+
+# Python packaging
+build/
+*.egg-info/
+
+# Jupyter
+.ipynb_checkpoints/
