@@ -1,4 +1,5 @@
 from app.models.audit_log import AuditLog
+from app.models.assistant import AssistantConversation, AssistantMessage
 from app.models.beneficiary import Beneficiary
 from app.models.beneficiary_relationship import BeneficiaryRelationship
 from app.models.blockchain import BlockchainBlock
@@ -17,6 +18,8 @@ from app.models.user import User
 
 __all__ = [
     "AuditLog",
+    "AssistantConversation",
+    "AssistantMessage",
     "Beneficiary",
     "BeneficiaryRelationship",
     "BlockchainBlock",

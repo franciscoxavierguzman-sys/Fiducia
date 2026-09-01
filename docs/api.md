@@ -318,3 +318,28 @@ Eventos activos registrados por el flujo actual:
 - `REMITTANCE_COMPLETED`
 
 `REMITTANCE_CONFIRMED` no se expone como evento activo porque no existe un punto de dominio separado en el lifecycle actual.
+
+## Asistente FIDUCIA Fase 9
+
+Endpoints protegidos por autenticacion:
+
+```text
+POST /api/v1/assistant/chat
+GET  /api/v1/assistant/conversations
+GET  /api/v1/assistant/conversations/{conversation_id}
+GET  /api/v1/assistant/capabilities
+GET  /api/v1/assistant/info
+```
+
+`POST /assistant/chat` recibe:
+
+```json
+{
+  "conversation_id": null,
+  "message": "Cual es el estado de mi ultima remesa?"
+}
+```
+
+La respuesta incluye `conversation_id`, `message_id`, `answer`, `intent`, `provider`, `tools_used`, `sources`, `source_types`, `warnings` y `generated_at`.
+
+El rol se deriva del token autenticado. El cliente no puede solicitar `role=ADMIN` en el payload. Las conversaciones solo pueden ser leidas por su propietario.

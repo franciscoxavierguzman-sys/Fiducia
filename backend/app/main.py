@@ -8,6 +8,7 @@ from app.core.config import settings
 from app.db.sqlite_migrations import ensure_sqlite_schema_compatibility
 from app.db.session import Base, engine
 from app.models import (
+    assistant,
     audit_log,
     beneficiary,
     beneficiary_relationship,

@@ -256,3 +256,33 @@ Campos principales:
 La tabla es append-only desde la API: no existen endpoints para editar o eliminar bloques. Cualquier alteracion directa en base de datos debe ser detectable por validacion de hash, enlace con bloque anterior o prueba de trabajo.
 
 No se almacenan datos personales, documentos, numeros completos de cuenta, numeros completos de tarjeta, CVV, contrasenas, JWT ni secretos en la cadena.
+
+## Asistente Fase 9
+
+Tablas:
+
+- `assistant_conversations`
+- `assistant_messages`
+
+`assistant_conversations`:
+
+- `user_id`
+- `title`
+- `is_active`
+- `created_at`
+- `updated_at`
+
+`assistant_messages`:
+
+- `conversation_id`
+- `role`
+- `content`
+- `intent`
+- `provider`
+- `tools_used_json`
+- `sources_json`
+- `safety_events_json`
+- `metadata_json`
+- `created_at`
+
+No se almacenan prompts internos, chain-of-thought, JWT, contrasenas, CVV ni credenciales de funding. Las conversaciones pertenecen al usuario que las creo; ADMIN no recibe acceso automatico al contenido completo de terceros.

@@ -495,8 +495,41 @@ type BlockchainVerification = {
   verified: number;
   mismatches: Array<{ block_index: number; expected_hash?: string; recorded_hash?: string }>;
 };
+type AssistantChatMessage = {
+  id?: number;
+  role: 'user' | 'assistant';
+  content: string;
+  intent?: string | null;
+  provider?: string | null;
+  tools_used_json?: string[] | null;
+  sources_json?: Array<Record<string, unknown>> | null;
+  created_at?: string;
+};
+type AssistantChatResponse = {
+  conversation_id: number;
+  message_id: number;
+  answer: string;
+  intent: string;
+  provider: string;
+  tools_used: string[];
+  sources: Array<Record<string, unknown>>;
+  source_types: string[];
+  warnings: string[];
+  generated_at: string;
+};
+type AssistantConversation = {
+  id: number;
+  title: string;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+};
+type AssistantConversationDetail = AssistantConversation & {
+  messages: AssistantChatMessage[];
+};
 type View =
   | 'dashboard'
+  | 'assistant'
   | 'beneficiaries'
   | 'funding'
   | 'new-remittance'
@@ -690,6 +723,7 @@ function App() {
         <section className="mx-auto max-w-7xl px-6 py-8">
           <nav className="mb-6 flex flex-wrap gap-2">
             <NavButton active={view === 'dashboard'} onClick={() => setView('dashboard')} label="Inicio" />
+            <NavButton active={view === 'assistant'} onClick={() => setView('assistant')} label="Asistente" />
             <NavButton active={view === 'new-remittance'} onClick={() => setView('new-remittance')} label="Enviar remesa" />
             <NavButton active={view === 'sent'} onClick={() => setView('sent')} label="Remesas enviadas" />
             <NavButton active={view === 'received'} onClick={() => setView('received')} label="Remesas recibidas" />
@@ -732,6 +766,7 @@ function App() {
               onProfile={() => setView('profile')}
             />
           ) : null}
+          {view === 'assistant' ? <AssistantView user={currentUser} /> : null}
           {view === 'beneficiaries' ? (
             <BeneficiariesView
               beneficiaries={beneficiaries}
@@ -1158,6 +1193,180 @@ function Dashboard({
         <TransactionTable transactions={transactions.slice(0, 5)} compact mode="sent" />
       </section>
     </div>
+  );
+}
+
+function AssistantView({ user }: { user: User }) {
+  const [conversations, setConversations] = React.useState<AssistantConversation[]>([]);
+  const [conversationId, setConversationId] = React.useState<number | null>(null);
+  const [messages, setMessages] = React.useState<AssistantChatMessage[]>([]);
+  const [input, setInput] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(false);
+  const [error, setError] = React.useState<string | null>(null);
+  const [lastSources, setLastSources] = React.useState<string[]>([]);
+
+  React.useEffect(() => {
+    loadConversations();
+  }, []);
+
+  async function loadConversations() {
+    try {
+      const data = await request<AssistantConversation[]>('/assistant/conversations');
+      setConversations(data);
+    } catch {
+      setConversations([]);
+    }
+  }
+
+  async function openConversation(id: number) {
+    setError(null);
+    try {
+      const detail = await request<AssistantConversationDetail>(`/assistant/conversations/${id}`);
+      setConversationId(detail.id);
+      setMessages(detail.messages);
+      setLastSources([]);
+    } catch {
+      setError('No se pudo abrir esta conversacion.');
+    }
+  }
+
+  function newConversation() {
+    setConversationId(null);
+    setMessages([]);
+    setInput('');
+    setLastSources([]);
+    setError(null);
+  }
+
+  async function sendMessage(messageText = input) {
+    const clean = messageText.trim();
+    if (!clean) return;
+    const userMessage: AssistantChatMessage = { role: 'user', content: clean };
+    setMessages((current) => [...current, userMessage]);
+    setInput('');
+    setIsLoading(true);
+    setError(null);
+    try {
+      const response = await request<AssistantChatResponse>('/assistant/chat', {
+        method: 'POST',
+        body: JSON.stringify({ conversation_id: conversationId, message: clean }),
+      });
+      setConversationId(response.conversation_id);
+      setMessages((current) => [
+        ...current,
+        {
+          id: response.message_id,
+          role: 'assistant',
+          content: response.answer,
+          intent: response.intent,
+          provider: response.provider,
+          sources_json: response.sources,
+          created_at: response.generated_at,
+        },
+      ]);
+      setLastSources(response.source_types);
+      await loadConversations();
+    } catch {
+      setError('No se pudo obtener respuesta del asistente. Intenta de nuevo.');
+      setMessages((current) => current.filter((item) => item !== userMessage));
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  const suggestions = assistantSuggestions(user.role.name);
+
+  return (
+    <section className="grid gap-6 lg:grid-cols-[280px_1fr]">
+      <aside className="panel h-fit">
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="section-title">Asistente</h2>
+          <button className="icon-button" type="button" onClick={newConversation} title="Nueva conversacion">
+            <Plus size={16} />
+          </button>
+        </div>
+        <p className="mt-3 text-sm leading-6 text-slate-500">Consultas informativas sobre datos autorizados de FIDUCIA.</p>
+        <div className="mt-5 grid gap-2">
+          {conversations.length === 0 ? <p className="text-sm text-slate-500">Sin conversaciones previas.</p> : null}
+          {conversations.slice(0, 8).map((conversation) => (
+            <button
+              className={conversationId === conversation.id ? 'nav-button-active text-left' : 'nav-button text-left'}
+              type="button"
+              key={conversation.id}
+              onClick={() => openConversation(conversation.id)}
+            >
+              {conversation.title}
+            </button>
+          ))}
+        </div>
+      </aside>
+
+      <section className="panel min-h-[620px]">
+        <div className="flex flex-wrap items-start justify-between gap-4 border-b border-slate-200 pb-5">
+          <div>
+            <h1 className="section-title">Asistente FIDUCIA</h1>
+            <p className="mt-1 text-sm text-slate-500">Responde con fuentes internas y respeta los permisos de tu perfil.</p>
+          </div>
+          <span className="rounded-full bg-fiducia-mint px-3 py-1 text-sm font-semibold text-fiducia-teal">Informativo</span>
+        </div>
+
+        <div className="mt-5 grid gap-3 md:grid-cols-2">
+          {messages.length === 0
+            ? suggestions.map((suggestion) => (
+                <button className="rounded-md border border-slate-200 bg-slate-50 p-3 text-left text-sm text-fiducia-navy transition hover:border-fiducia-teal" type="button" key={suggestion} onClick={() => sendMessage(suggestion)}>
+                  {suggestion}
+                </button>
+              ))
+            : null}
+        </div>
+
+        <div className="mt-6 max-h-[380px] space-y-4 overflow-y-auto pr-2">
+          {messages.map((message, index) => (
+            <div className={message.role === 'user' ? 'ml-auto max-w-[85%] rounded-lg bg-fiducia-teal p-4 text-white' : 'max-w-[88%] rounded-lg border border-slate-200 bg-white p-4 text-fiducia-ink'} key={`${message.role}-${message.id ?? index}`}>
+              <p className="whitespace-pre-line text-sm leading-6">{message.content}</p>
+              {message.role === 'assistant' && message.intent ? (
+                <p className="mt-3 text-xs text-slate-400">Intencion: {assistantIntentLabel(message.intent)}</p>
+              ) : null}
+            </div>
+          ))}
+          {isLoading ? <div className="max-w-[88%] rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-500">Consultando datos autorizados...</div> : null}
+        </div>
+
+        {error ? <div className="mt-4"><StatusMessage message={error} type="error" /></div> : null}
+        {lastSources.length > 0 ? (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {lastSources.map((source) => (
+              <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600" key={source}>
+                Basado en {assistantSourceLabel(source)}
+              </span>
+            ))}
+          </div>
+        ) : null}
+
+        <form
+          className="mt-5 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row"
+          onSubmit={(event) => {
+            event.preventDefault();
+            sendMessage();
+          }}
+        >
+          <input
+            className="min-h-[44px] flex-1 rounded-md border border-slate-300 px-3 py-2 outline-none transition focus:border-fiducia-teal focus:ring-2 focus:ring-fiducia-mint"
+            value={input}
+            maxLength={3000}
+            onChange={(event) => setInput(event.target.value)}
+            placeholder="Escribe una consulta sobre tus remesas o datos autorizados"
+          />
+          <button className="primary-button inline-flex items-center justify-center gap-2" type="submit" disabled={isLoading || !input.trim()}>
+            <Send size={16} />
+            Enviar
+          </button>
+        </form>
+        <p className="mt-3 text-xs leading-5 text-slate-400">
+          Las respuestas del asistente son informativas y no sustituyen decisiones financieras o de riesgo.
+        </p>
+      </section>
+    </section>
   );
 }
 
@@ -3675,6 +3884,62 @@ function blockchainEventLabel(eventType: string) {
     REMITTANCE_COMPLETED: 'Remesa completada',
   };
   return labels[eventType] ?? eventType;
+}
+
+function assistantSuggestions(role: string) {
+  if (role === 'ADMIN') {
+    return [
+      'Resume los KPIs principales.',
+      'Cuales son los corredores principales?',
+      'Que proyecta el forecast?',
+      'La cadena blockchain es valida?',
+    ];
+  }
+  if (role === 'RISK_ANALYST') {
+    return [
+      'Que evaluaciones requieren revision?',
+      'Explicame una evaluacion de riesgo.',
+      'Cuales son las principales senales?',
+      'Verifica blockchain de la ultima remesa.',
+    ];
+  }
+  return [
+    'Cual es el estado de mi ultima remesa?',
+    'Cuanto pague de comision?',
+    'Como agrego un beneficiario?',
+    'Que significa Disponible?',
+  ];
+}
+
+function assistantIntentLabel(intent: string) {
+  const labels: Record<string, string> = {
+    GENERAL_HELP: 'Soporte',
+    MY_REMITTANCES: 'Mis remesas',
+    REMITTANCE_STATUS: 'Estado de remesa',
+    REMITTANCE_FEES: 'Comisiones',
+    BI_OVERVIEW: 'Resumen BI',
+    BI_CORRIDORS: 'Corredores',
+    BI_CUSTOMERS: 'Clientes',
+    FORECAST_SUMMARY: 'Forecast',
+    RISK_QUEUE: 'Riesgo',
+    RISK_EXPLANATION: 'Explicacion de riesgo',
+    BLOCKCHAIN_TRACE: 'Trazabilidad',
+    BLOCKCHAIN_VERIFY: 'Verificacion blockchain',
+    OUT_OF_SCOPE: 'Fuera de alcance',
+  };
+  return labels[intent] ?? intent;
+}
+
+function assistantSourceLabel(source: string) {
+  const labels: Record<string, string> = {
+    remittance: 'Remesas',
+    risk_assessment: 'Riesgo',
+    bi: 'BI',
+    forecast: 'Forecast',
+    blockchain: 'Blockchain',
+    knowledge: 'Ayuda FIDUCIA',
+  };
+  return labels[source] ?? source;
 }
 
 function formatDate(value: string) {

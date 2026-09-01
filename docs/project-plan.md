@@ -980,25 +980,33 @@ Criterios de aceptacion:
 - `ADMIN` y `RISK_ANALYST` tienen acceso de auditoria segun permisos.
 - Blockchain no mueve dinero, no bloquea remesas y no modifica modelos, reglas, thresholds, forecasting ni BI.
 
-### Fase 9 - Remesas Guatemala y forecasting
+### Fase 9 - Asistente inteligente
 
-Objetivo: importar datos externos de remesas Guatemala y crear analisis historico con proyeccion simple.
+Objetivo: implementar una capa conversacional read-only con asistencia, IA generativa opcional, consultas contextuales, explicabilidad y grounding sobre servicios internos.
 
 Archivos esperados:
 
-- importador CSV;
-- metadata de fuente;
-- dashboard Remesas Guatemala;
-- modulo de forecasting simple.
+- modulo `app/assistant`;
+- modelos de conversacion;
+- intent router;
+- tool registry;
+- provider deterministico offline;
+- provider externo opcional con fallback;
+- API `/assistant`;
+- frontend `Asistente`;
+- dataset de evaluacion controlado;
+- documentacion de arquitectura, seguridad, privacidad y evaluacion.
 
 Criterios de aceptacion:
 
-- Se puede importar CSV macroeconomico.
-- La fuente, periodo y transformaciones quedan documentadas.
-- El dashboard muestra evolucion, crecimiento anual, variacion mensual y promedio movil.
-- La proyeccion usa un baseline sencillo.
-- Las limitaciones del pronostico estan documentadas.
-- No se presenta ninguna proyeccion como certeza.
+- El asistente consulta solo datos autorizados.
+- CLIENT solo accede a sus propias remesas.
+- BI, Forecast, Risk y Blockchain se reutilizan sin recalcular ni modificar.
+- No ejecuta pagos ni acciones financieras.
+- No toma decisiones automaticas de riesgo.
+- No revela system prompt ni datos de terceros.
+- Hay tests de seguridad, ownership, grounding y fidelity.
+- Existe evaluacion controlada con metricas reales.
 
 ### Fase 10 - Experiencia, Fidu y defensa
 
@@ -1045,6 +1053,14 @@ Estado: implementada sobre baseline `fiducia-phase7-baseline` en rama `phase8-bl
 Incluye cadena local append-only, bloque genesis, canonicalizacion deterministica, SHA-256, prueba de trabajo local, idempotencia por evento, registro de evidencias para remesas y evaluaciones de riesgo, endpoints protegidos, validacion de integridad, deteccion de tampering, script demo y frontend `Trazabilidad blockchain`.
 
 No se modifican `fraud-model-v1`, `anomaly-model-v1`, `rules-v1`, `risk-engine-v1.1`, `remittance-forecast-v1` ni formulas de BI. La cadena es una capa de evidencia, no un sistema de pagos ni un mecanismo de decision automatica.
+
+## Fase 9 - Asistente inteligente
+
+Estado: implementada sobre baseline `fiducia-phase8-baseline` en rama `phase9-intelligent-assistant`.
+
+Incluye intent routing deterministico, tool registry, autorizacion antes de retrieval, `DeterministicAssistantProvider`, proveedor externo opcional con fallback, prompt builder, grounding, provenance, persistencia de conversaciones, auditoria, API `/assistant`, frontend `Asistente` y evaluacion controlada.
+
+El asistente es read-only. No crea remesas, no ejecuta pagos, no modifica beneficiarios, no aprueba/rechaza riesgo, no recalcula modelos, no cambia blockchain y no accede a internet.
 
 ## 20. Criterios globales de calidad
 
