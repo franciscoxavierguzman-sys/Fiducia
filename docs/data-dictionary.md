@@ -135,3 +135,17 @@ Las features incluidas y excluidas para ML se documentan en `docs/phase4-ml-plan
 La evidencia blockchain excluye PII y datos sensibles. Para remesas se registran identificadores internos, paises, monedas, montos, estado y fecha canonica. Para riesgo se registran versiones, scores agregados, banda de riesgo y accion recomendada, manteniendo `ml_probability` separada de la clasificacion.
 
 La idempotencia de riesgo usa `risk_assessment_id` como identidad estable para permitir multiples evaluaciones validas de una misma remesa sin duplicar la misma evaluacion.
+
+## Variables Fase 9
+
+| Variable | Tipo | Descripcion |
+| --- | --- | --- |
+| assistant.intent | string | Intent detectado por router deterministico |
+| assistant.provider | string | Proveedor utilizado: deterministic o external con fallback |
+| assistant.tools_used_json | JSON | Tools internas ejecutadas |
+| assistant.sources_json | JSON | Fuentes autorizadas usadas para grounding |
+| assistant.safety_events_json | JSON | Eventos como prompt injection o escalacion de rol |
+| assistant.metadata_json | JSON | Metadata de respuesta sin secretos |
+| assistant.conversation.user_id | integer | Propietario de la conversacion |
+
+El contexto enviado al provider se minimiza por intent y rol. No incluye password, JWT, datos completos de tarjeta, CVV, documentos ni detalles bancarios innecesarios.

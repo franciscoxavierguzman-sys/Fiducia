@@ -137,3 +137,20 @@ Remesa / evaluacion de riesgo
 La cadena no sustituye la base operacional ni ejecuta pagos. Su responsabilidad es demostrar integridad verificable de eventos: remesa creada, remesa disponible, evaluacion de riesgo registrada y remesa completada.
 
 Los modelos `fraud-model-v1`, `anomaly-model-v1`, `rules-v1`, `risk-engine-v1.1` y `remittance-forecast-v1` permanecen sin cambios. Blockchain consume sus resultados como evidencia, pero no recalcula riesgo, no modifica thresholds y no bloquea automaticamente una remesa.
+
+## Extension Fase 9
+
+La Fase 9 agrega un asistente read-only:
+
+```text
+Usuario autenticado
+  -> intent router deterministico
+  -> tool registry
+  -> autorizacion antes de retrieval
+  -> servicios internos FIDUCIA
+  -> contexto minimo
+  -> provider deterministico o externo opcional
+  -> respuesta con provenance
+```
+
+El asistente no es fuente paralela de verdad. Consulta remesas, BI, forecasting, riesgo y blockchain mediante servicios existentes. No crea pagos, no modifica scores y no toma decisiones de riesgo.

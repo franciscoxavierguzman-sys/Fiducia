@@ -83,3 +83,46 @@ def ensure_sqlite_schema_compatibility() -> None:
                 connection.execute(text("ALTER TABLE risk_assessments ADD COLUMN risk_band_thresholds_json JSON"))
             if "signal_status_json" not in columns:
                 connection.execute(text("ALTER TABLE risk_assessments ADD COLUMN signal_status_json JSON"))
+
+        if "assistant_conversations" not in table_names:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE assistant_conversations (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        user_id INTEGER NOT NULL,
+                        title VARCHAR(160) NOT NULL,
+                        is_active BOOLEAN NOT NULL DEFAULT 1,
+                        created_at DATETIME NOT NULL,
+                        updated_at DATETIME NOT NULL,
+                        FOREIGN KEY(user_id) REFERENCES users (id)
+                    )
+                    """
+                )
+            )
+            connection.execute(text("CREATE INDEX ix_assistant_conversations_id ON assistant_conversations (id)"))
+            connection.execute(text("CREATE INDEX ix_assistant_conversations_user_id ON assistant_conversations (user_id)"))
+
+        if "assistant_messages" not in table_names:
+            connection.execute(
+                text(
+                    """
+                    CREATE TABLE assistant_messages (
+                        id INTEGER NOT NULL PRIMARY KEY,
+                        conversation_id INTEGER NOT NULL,
+                        role VARCHAR(20) NOT NULL,
+                        content TEXT NOT NULL,
+                        intent VARCHAR(80),
+                        provider VARCHAR(80),
+                        tools_used_json JSON,
+                        sources_json JSON,
+                        safety_events_json JSON,
+                        metadata_json JSON,
+                        created_at DATETIME NOT NULL,
+                        FOREIGN KEY(conversation_id) REFERENCES assistant_conversations (id)
+                    )
+                    """
+                )
+            )
+            connection.execute(text("CREATE INDEX ix_assistant_messages_id ON assistant_messages (id)"))
+            connection.execute(text("CREATE INDEX ix_assistant_messages_conversation_id ON assistant_messages (conversation_id)"))

@@ -275,3 +275,27 @@ Comandos:
 cd frontend
 npm run build
 ```
+
+## Asistente FIDUCIA Fase 9
+
+La vista `Asistente` permite realizar consultas informativas con lenguaje natural sobre datos autorizados. El asistente es read-only: no crea remesas, no ejecuta pagos, no cambia riesgo y no modifica blockchain.
+
+Capacidades iniciales:
+
+- soporte general curado;
+- estado y comisiones de remesas propias;
+- KPIs y corredores para perfiles autorizados;
+- forecast interno para perfiles autorizados;
+- explicacion de snapshots de riesgo;
+- verificacion de trazabilidad blockchain.
+
+El proveedor por defecto es `deterministic`, funciona offline y no requiere API key. Un proveedor externo puede configurarse opcionalmente mediante variables de entorno, con fallback controlado.
+
+Comandos:
+
+```powershell
+.\backend\.venv\Scripts\python.exe -m pytest backend\tests\test_phase9_assistant.py
+.\backend\.venv\Scripts\python.exe scripts\evaluate_assistant.py
+cd frontend
+npm run build
+```
