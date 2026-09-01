@@ -777,7 +777,7 @@ function Header({ currentUser, onLogout }: { currentUser: User | null; onLogout:
         </div>
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-fiducia-mint px-4 py-2 text-sm font-medium text-fiducia-teal">
-            Fase 3 - Datos
+            IA + Analítica
           </span>
           {currentUser ? (
             <button className="secondary-button inline-flex items-center gap-2" type="button" onClick={onLogout}>
