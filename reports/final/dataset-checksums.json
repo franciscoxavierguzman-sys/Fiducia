@@ -1,0 +1,15 @@
+{
+  "generated_at": "2026-09-01T22:27:55.295023+00:00",
+  "files": {
+    "data/processed/remittances_analytics.csv": {
+      "exists": true,
+      "sha256": "18c3b07edae88d373e0e50169015267a975c50a3315f7f919f6505f4147f2a27",
+      "size_bytes": 3769450
+    },
+    "data/processed/forecasting/weekly_remittances_forecasting.csv": {
+      "exists": true,
+      "sha256": "475cb49aae8ffc62de3195cc421c1ea0a054d5a3fb602fe28dc612cbfd941bf1",
+      "size_bytes": 3160
+    }
+  }
+}

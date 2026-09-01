@@ -1,0 +1,55 @@
+{
+  "generated_at": "2026-09-01T22:24:00-06:00",
+  "scope": "Revision local automatizada y manual proporcional al prototipo FIDUCIA 1.0.0. No equivale a penetration test profesional.",
+  "categories": {
+    "auth": {
+      "status": "PASS",
+      "notes": "Login usa hash bcrypt/passlib y JWT con expiracion. Se agrego rate limiting in-process para login."
+    },
+    "authorization": {
+      "status": "PASS",
+      "notes": "Endpoints internos de risk, BI, forecast, blockchain explorer y system aplican controles por rol."
+    },
+    "idor": {
+      "status": "PASS",
+      "notes": "Beneficiarios, remesas, tracking, blockchain propio y conversaciones del asistente validan propiedad para CLIENT."
+    },
+    "input_validation": {
+      "status": "PASS",
+      "notes": "Schemas Pydantic validan email, montos, documentos, contrasenas, fechas, filtros y longitud del mensaje del asistente."
+    },
+    "secrets": {
+      "status": "PASS",
+      "notes": "Scan encontro placeholders, variables, tokens de prueba y credenciales demo locales; no se detectaron secretos reales ni claves sk-."
+    },
+    "pii": {
+      "status": "PASS",
+      "notes": "Blockchain, asistente y auditoria evitan guardar CVV, JWT, contrasenas y datos completos de cuentas/tarjetas."
+    },
+    "xss": {
+      "status": "PASS",
+      "notes": "No se detecto dangerouslySetInnerHTML en frontend/src. React escapa contenido renderizado por defecto."
+    },
+    "sql_injection": {
+      "status": "PASS",
+      "notes": "El backend usa SQLAlchemy y consultas parametrizadas. No se detecto concatenacion SQL con input de usuario."
+    },
+    "rate_limiting": {
+      "status": "PASS",
+      "notes": "Rate limiting local aplicado a login y assistant chat. Para produccion se requiere mecanismo distribuido."
+    },
+    "assistant": {
+      "status": "PASS",
+      "notes": "Asistente read-only, role-aware, con minimizacion, fallback y pruebas de prompt injection."
+    },
+    "blockchain": {
+      "status": "PASS",
+      "notes": "Cadena local append-only desde API, validacion de hashes y evidencia sin PII."
+    }
+  },
+  "attention": [
+    "SECRET_KEY por defecto es placeholder local y debe cambiarse en .env.",
+    "SQLite no es base productiva multiusuario.",
+    "Rate limiting in-process no protege entornos multiinstancia."
+  ]
+}

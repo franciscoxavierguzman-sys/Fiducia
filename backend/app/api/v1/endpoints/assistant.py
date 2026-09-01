@@ -1,9 +1,10 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.api.dependencies import get_current_user
 from app.db.session import get_db
 from app.models.user import User
+from app.core.rate_limit import client_rate_key, rate_limiter
 from app.schemas.assistant import (
     AssistantCapability,
     AssistantChatRequest,
@@ -18,7 +19,8 @@ router = APIRouter()
 
 
 @router.post("/chat", response_model=AssistantChatResponse)
-def chat(payload: AssistantChatRequest, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+def chat(payload: AssistantChatRequest, request: Request, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    rate_limiter.check(client_rate_key(request, f"assistant:{current_user.id}"), limit=300, window_seconds=60)
     return assistant_service.chat(db, current_user, payload.message, payload.conversation_id)
 
 

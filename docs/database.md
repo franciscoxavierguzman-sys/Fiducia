@@ -286,3 +286,7 @@ Tablas:
 - `created_at`
 
 No se almacenan prompts internos, chain-of-thought, JWT, contrasenas, CVV ni credenciales de funding. Las conversaciones pertenecen al usuario que las creo; ADMIN no recibe acceso automatico al contenido completo de terceros.
+
+## Cierre Fase 10
+
+Fase 10 no agrega tablas nuevas. Se mantienen las tablas operacionales existentes y se documenta la limitacion de SQLite para concurrencia productiva en `docs/sqlite-limitations.md`.

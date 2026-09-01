@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import assistant, analytics, auth, beneficiaries, bi, blockchain, catalogs, forecasting, funding_sources, remittances, risk, tracking, transactions, users
+from app.api.v1.endpoints import assistant, analytics, auth, beneficiaries, bi, blockchain, catalogs, forecasting, funding_sources, remittances, risk, system, tracking, transactions, users
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["auth"])
@@ -17,3 +17,4 @@ api_router.include_router(bi.router, prefix="/bi", tags=["business-intelligence"
 api_router.include_router(blockchain.router, prefix="/blockchain", tags=["blockchain"])
 api_router.include_router(risk.router, prefix="/risk", tags=["risk"])
 api_router.include_router(forecasting.router, prefix="/forecasting", tags=["forecasting"])
+api_router.include_router(system.router, prefix="/system", tags=["system"])

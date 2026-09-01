@@ -343,3 +343,18 @@ GET  /api/v1/assistant/info
 La respuesta incluye `conversation_id`, `message_id`, `answer`, `intent`, `provider`, `tools_used`, `sources`, `source_types`, `warnings` y `generated_at`.
 
 El rol se deriva del token autenticado. El cliente no puede solicitar `role=ADMIN` en el payload. Las conversaciones solo pueden ser leidas por su propietario.
+
+## Sistema Fase 10
+
+```text
+GET /health
+GET /ready
+GET /api/v1/system/info
+GET /api/v1/system/metrics
+```
+
+`/health` y `/ready` son publicos y responden minimo `status`, `service` y `version`.
+
+`/api/v1/system/info` y `/api/v1/system/metrics` requieren `ADMIN`. Devuelven version de aplicacion, ambiente, estado DB, versiones de componentes y metricas tecnicas simples. No exponen secretos, rutas sensibles ni llaves.
+
+Todas las respuestas HTTP incluyen `X-Request-ID`, `X-Content-Type-Options`, `X-Frame-Options` y `Referrer-Policy`.

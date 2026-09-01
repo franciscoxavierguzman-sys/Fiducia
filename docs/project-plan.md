@@ -1062,6 +1062,14 @@ Incluye intent routing deterministico, tool registry, autorizacion antes de retr
 
 El asistente es read-only. No crea remesas, no ejecuta pagos, no modifica beneficiarios, no aprueba/rechaza riesgo, no recalcula modelos, no cambia blockchain y no accede a internet.
 
+## Fase 10 - Integracion final, hardening y cierre
+
+Estado: implementada sobre baseline `fiducia-phase9-baseline` en rama `phase10-final-hardening`.
+
+Incluye version `1.0.0`, request ID, headers HTTP basicos, rate limiting local, endpoints ADMIN de sistema, matriz de autorizacion, inventario, configuracion, logging, limitaciones SQLite, instalacion, runbook, demo, scripts finales, reportes de evidencia, E2E y load test local.
+
+No se modifican `fraud-model-v1`, `anomaly-model-v1`, `rules-v1`, `risk-engine-v1.1`, `remittance-forecast-v1`, `local-blockchain-v1` ni la arquitectura de proveedor del asistente. No existe Fase 11; cualquier mejora queda en `docs/future-roadmap.md`.
+
 ## 20. Criterios globales de calidad
 
 Para considerar FIDUCIA listo como prototipo academico:
