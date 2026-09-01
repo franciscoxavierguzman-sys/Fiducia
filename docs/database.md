@@ -229,3 +229,30 @@ Permiten conservar snapshots de pronosticos generados:
 - valor estimado;
 - intervalos 80/95;
 - `actual_value` nullable para comparacion futura.
+
+## Blockchain Fase 8
+
+Tabla:
+
+- `blockchain_blocks`
+
+Campos principales:
+
+- `block_index`: indice secuencial, unico e inmutable.
+- `timestamp`: fecha canonica del bloque.
+- `event_type`: evento registrado.
+- `entity_type`: `remittance`, `risk_assessment` o `system`.
+- `entity_reference`: referencia interna no sensible.
+- `evidence_hash`: SHA-256 del payload canonico de evidencia.
+- `previous_hash`: hash del bloque anterior.
+- `nonce`: valor encontrado por prueba de trabajo local.
+- `difficulty`: dificultad aplicada al bloque.
+- `block_hash`: SHA-256 del encabezado canonico del bloque.
+- `schema_version`: version de evidencia (`local-blockchain-v1`, `remittance-evidence-v1`, `risk-evidence-v1`).
+- `idempotency_key`: clave unica para evitar evidencia duplicada por evento.
+- `record_status`: estado de registro.
+- `mining_time_ms`: tiempo local de minado en milisegundos.
+
+La tabla es append-only desde la API: no existen endpoints para editar o eliminar bloques. Cualquier alteracion directa en base de datos debe ser detectable por validacion de hash, enlace con bloque anterior o prueba de trabajo.
+
+No se almacenan datos personales, documentos, numeros completos de cuenta, numeros completos de tarjeta, CVV, contrasenas, JWT ni secretos en la cadena.

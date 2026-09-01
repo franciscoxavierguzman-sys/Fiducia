@@ -954,23 +954,31 @@ Criterios de aceptacion:
 - Los datos sinteticos se identifican como tales.
 - Hay pruebas para calculos principales.
 
-### Fase 8 - Proyecciones financieras
+### Fase 8 - Blockchain, trazabilidad e integridad verificable
 
-Objetivo: implementar escenarios financiero-operativos configurables.
+Objetivo: implementar una capa local de evidencia blockchain para demostrar integridad de eventos operativos sin exponer datos personales ni alterar el nucleo transaccional.
 
 Archivos esperados:
 
-- modulo de proyecciones;
-- funciones financieras;
-- pantalla de escenarios.
+- modulo blockchain local;
+- proveedor `LocalBlockchainProvider`;
+- canonicalizacion deterministica;
+- hashing SHA-256;
+- persistencia `blockchain_blocks`;
+- endpoints protegidos de consulta, historial, verificacion y validacion;
+- pantalla interna de trazabilidad;
+- documentacion metodologica, arquitectura, amenaza, evidencia y verificacion.
 
 Criterios de aceptacion:
 
-- Existen escenarios conservador, base y optimista.
-- Los supuestos son editables o centralizados.
-- Se calculan ingresos, costos, flujo de caja, punto de equilibrio, ROI, VAN, TIR y payback cuando existan datos suficientes.
-- Los resultados se identifican como proyecciones basadas en supuestos.
-- Hay pruebas de formulas financieras.
+- La cadena registra eventos relevantes de remesa y evaluaciones de riesgo.
+- La evidencia no incluye PII ni datos sensibles.
+- Existe bloque genesis y prueba de trabajo local configurable.
+- La cadena es append-only desde API.
+- Se puede validar integridad y detectar tampering.
+- Los clientes solo acceden a trazabilidad de sus propias remesas.
+- `ADMIN` y `RISK_ANALYST` tienen acceso de auditoria segun permisos.
+- Blockchain no mueve dinero, no bloquea remesas y no modifica modelos, reglas, thresholds, forecasting ni BI.
 
 ### Fase 9 - Remesas Guatemala y forecasting
 
@@ -1029,6 +1037,14 @@ Se implementa `remittance-forecast-v1` para pronostico semanal experimental de `
 Estado: implementada sobre Fases 1-6 en rama `phase7-business-intelligence`.
 
 Incluye catalogo central de KPIs, formulas documentadas, comparacion temporal, revenue con comisiones historicas, multimoneda en USD equivalente, corredores, clientes agregados, operaciones, riesgo agregado, forecast ejecutivo, insights deterministricos, export CSV y frontend `Inteligencia de negocio`. No crea modelos nuevos, no recalcula riesgo y no reentrena forecasting.
+
+## Fase 8 - Blockchain, trazabilidad e integridad verificable
+
+Estado: implementada sobre baseline `fiducia-phase7-baseline` en rama `phase8-blockchain`.
+
+Incluye cadena local append-only, bloque genesis, canonicalizacion deterministica, SHA-256, prueba de trabajo local, idempotencia por evento, registro de evidencias para remesas y evaluaciones de riesgo, endpoints protegidos, validacion de integridad, deteccion de tampering, script demo y frontend `Trazabilidad blockchain`.
+
+No se modifican `fraud-model-v1`, `anomaly-model-v1`, `rules-v1`, `risk-engine-v1.1`, `remittance-forecast-v1` ni formulas de BI. La cadena es una capa de evidencia, no un sistema de pagos ni un mecanismo de decision automatica.
 
 ## 20. Criterios globales de calidad
 

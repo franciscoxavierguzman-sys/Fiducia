@@ -11,6 +11,7 @@ from app.models import (
     audit_log,
     beneficiary,
     beneficiary_relationship,
+    blockchain,
     country,
     department,
     exchange_rate,

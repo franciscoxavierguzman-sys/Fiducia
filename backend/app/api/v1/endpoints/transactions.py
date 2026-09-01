@@ -18,6 +18,7 @@ from app.repositories.transactions import (
 )
 from app.schemas.transaction import TransactionCreate, TransactionRead
 from app.services.audit import log_audit_event
+from app.services.blockchain import record_remittance_event
 from app.services.remittances import simulate_remittance
 from app.services.risk_engine import evaluate_remittance
 from app.services.status_history import record_status_change
@@ -93,6 +94,8 @@ def create_transaction(
         entity_id=transaction.transaction_id,
         metadata={"status": transaction.status, "beneficiary_user_id": transaction.beneficiary_user_id},
     )
+    record_remittance_event(db, transaction, "REMITTANCE_CREATED", current_user.id)
+    record_remittance_event(db, transaction, "REMITTANCE_AVAILABLE", current_user.id)
     evaluate_remittance(db, transaction, actor_user_id=current_user.id)
     db.commit()
     db.refresh(transaction)
@@ -140,6 +143,7 @@ def receive_transaction(
             "delivery_method": transaction.delivery_method,
         },
     )
+    record_remittance_event(db, transaction, "REMITTANCE_COMPLETED", current_user.id)
     db.commit()
     db.refresh(transaction)
     return get_transaction(db, transaction.id, current_user.id)
