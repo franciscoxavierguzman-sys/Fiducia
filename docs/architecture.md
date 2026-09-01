@@ -106,3 +106,17 @@ data/processed/remittances_analytics.csv
 ```
 
 Forecasting trabaja con datos agregados y no modifica ningun score o decision del Risk Engine.
+
+## Extension Fase 7
+
+La Fase 7 agrega Business Intelligence como capa read-only:
+
+```text
+transactions / users / risk_assessments / forecast artifacts
+  -> backend/app/bi/*
+  -> backend/app/services/business_intelligence.py
+  -> /api/v1/bi/*
+  -> frontend Inteligencia de negocio
+```
+
+BI no recalcula riesgo, no reentrena forecasting, no crea un modelo nuevo y no expone PII en el dashboard ejecutivo.

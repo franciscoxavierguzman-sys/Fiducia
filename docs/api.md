@@ -263,3 +263,25 @@ GET /api/v1/forecasting/corridors?horizon=4
 ```
 
 `CLIENT` recibe 403. Horizons, targets y granularidad se validan contra catalogos cerrados.
+
+## Business Intelligence Fase 7
+
+Endpoints protegidos para `ADMIN` y `RISK_ANALYST`:
+
+```text
+GET /api/v1/bi/kpis
+GET /api/v1/bi/overview
+GET /api/v1/bi/trends
+GET /api/v1/bi/corridors
+GET /api/v1/bi/customers
+GET /api/v1/bi/operations
+GET /api/v1/bi/risk
+GET /api/v1/bi/forecast
+GET /api/v1/bi/executive-summary
+GET /api/v1/bi/exports/kpis.csv
+GET /api/v1/bi/exports/corridors.csv
+```
+
+Filtros comunes: `date_from`, `date_to`, `origin_country`, `destination_country`, `currency`, `status`.
+
+`CLIENT` recibe `403 BI_FORBIDDEN`. Las exportaciones CSV son agregadas y no incluyen PII.

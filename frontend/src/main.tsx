@@ -388,6 +388,67 @@ type ForecastCorridor = {
   forecast_amount_usd_next_4w: string;
   status: string;
 };
+type BIOverview = {
+  current: Record<string, number | string | null>;
+  previous: Record<string, number | string | null> | null;
+  changes: Record<string, { absolute_change: number | string | null; percentage_change: string | null }>;
+};
+type BITrendPoint = {
+  period: string;
+  remittances: number;
+  amount_usd_equivalent: string;
+  commission_revenue_usd_equivalent: string;
+};
+type BICorridor = {
+  corridor: string;
+  remittance_count: number;
+  total_amount_usd_equivalent: string;
+  average_ticket_usd_equivalent: string | null;
+  commission_revenue_usd_equivalent: string;
+  completion_rate: string | null;
+  risk_distribution: Array<{ risk_band: string; label: string; count: number; share: string | null }>;
+};
+type BICustomers = {
+  active_clients: number;
+  new_clients: number;
+  returning_clients: number;
+  repeat_senders: number;
+  repeat_sender_rate: string | null;
+  remittances_per_client: string | null;
+  average_amount_per_client_usd_equivalent: string | null;
+};
+type BIOperations = {
+  status_distribution: Array<{ status: string; label: string; count: number }>;
+  processing_remittances: number;
+  available_remittances: number;
+  completed_remittances: number;
+  review_required: number;
+  rejected_remittances: number;
+};
+type BIRisk = {
+  assessment_count: number;
+  risk_distribution: Array<{ risk_band: string; label: string; count: number; share: string | null }>;
+  average_final_risk_score: string | null;
+  manual_reviews: number;
+  review_count: number;
+  approved_reviews: number;
+  escalated_reviews: number;
+  rejected_reviews: number;
+};
+type BIForecast = {
+  model_version: string;
+  go_decision: string;
+  horizon: number;
+  next_4_weeks_count: string;
+  next_4_weeks_amount_usd: string;
+  drift_status: string;
+  data_type: string;
+};
+type BIExecutiveSummary = {
+  highlights: Array<{ priority: 'INFO' | 'ATTENTION'; code: string; message: string; source_kpis: string[] }>;
+  attention_points: Array<{ priority: 'INFO' | 'ATTENTION'; code: string; message: string; source_kpis: string[] }>;
+  forecast_outlook: BIForecast;
+};
 type View =
   | 'dashboard'
   | 'beneficiaries'
@@ -398,6 +459,7 @@ type View =
   | 'tracking'
   | 'profile'
   | 'detail'
+  | 'bi'
   | 'analytics'
   | 'risk'
   | 'risk-review'
@@ -588,6 +650,9 @@ function App() {
             <NavButton active={view === 'funding'} onClick={() => setView('funding')} label="Metodos de pago" />
             <NavButton active={view === 'tracking'} onClick={() => setView('tracking')} label="Rastrear remesa" />
             {canViewAnalytics ? (
+              <NavButton active={view === 'bi'} onClick={() => setView('bi')} label="Inteligencia de negocio" />
+            ) : null}
+            {canViewAnalytics ? (
               <NavButton active={view === 'analytics'} onClick={() => setView('analytics')} label="Analitica" />
             ) : null}
             {canViewAnalytics ? (
@@ -646,6 +711,7 @@ function App() {
             />
           ) : null}
           {view === 'tracking' ? <TrackingView showMessage={showMessage} /> : null}
+          {view === 'bi' && canViewAnalytics ? <BusinessIntelligenceView /> : null}
           {view === 'analytics' && canViewAnalytics ? <AnalyticsView /> : null}
           {view === 'forecasting' && canViewAnalytics ? <ForecastingView /> : null}
           {view === 'risk' && canViewAnalytics ? <RiskIntelligenceView /> : null}
@@ -1144,6 +1210,308 @@ function AnalyticsView() {
           </div>
         </AnalyticsPanel>
       </section>
+    </div>
+  );
+}
+
+function BusinessIntelligenceView() {
+  const [overview, setOverview] = React.useState<BIOverview | null>(null);
+  const [trends, setTrends] = React.useState<BITrendPoint[]>([]);
+  const [corridors, setCorridors] = React.useState<BICorridor[]>([]);
+  const [customers, setCustomers] = React.useState<BICustomers | null>(null);
+  const [operations, setOperations] = React.useState<BIOperations | null>(null);
+  const [risk, setRisk] = React.useState<BIRisk | null>(null);
+  const [forecast, setForecast] = React.useState<BIForecast | null>(null);
+  const [summary, setSummary] = React.useState<BIExecutiveSummary | null>(null);
+  const [metricMode, setMetricMode] = React.useState<'remittances' | 'amount'>('remittances');
+  const [sortBy, setSortBy] = React.useState<'commission' | 'count' | 'amount'>('commission');
+  const [filters, setFilters] = React.useState({
+    date_from: '',
+    date_to: '',
+    origin_country: '',
+    destination_country: '',
+    currency: '',
+    status: '',
+  });
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [error, setError] = React.useState<string | null>(null);
+
+  React.useEffect(() => {
+    loadBI();
+  }, []);
+
+  const query = React.useMemo(() => {
+    const params = new URLSearchParams();
+    Object.entries(filters).forEach(([key, value]) => {
+      if (!value) return;
+      params.set(key, key === 'date_to' ? `${value}T23:59:59` : key === 'date_from' ? `${value}T00:00:00` : value);
+    });
+    return params.toString() ? `?${params.toString()}` : '';
+  }, [filters]);
+
+  async function loadBI() {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const [overviewData, trendData, corridorData, customerData, operationData, riskData, forecastData, summaryData] = await Promise.all([
+        request<BIOverview>(`/bi/overview${query}`),
+        request<BITrendPoint[]>(`/bi/trends${query}`),
+        request<BICorridor[]>(`/bi/corridors${query}`),
+        request<BICustomers>(`/bi/customers${query}`),
+        request<BIOperations>(`/bi/operations${query}`),
+        request<BIRisk>(`/bi/risk${query}`),
+        request<BIForecast>('/bi/forecast'),
+        request<BIExecutiveSummary>(`/bi/executive-summary${query}`),
+      ]);
+      setOverview(overviewData);
+      setTrends(trendData);
+      setCorridors(corridorData);
+      setCustomers(customerData);
+      setOperations(operationData);
+      setRisk(riskData);
+      setForecast(forecastData);
+      setSummary(summaryData);
+    } catch {
+      setError('No se pudo cargar Inteligencia de negocio. Verifica permisos y disponibilidad del backend.');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function downloadBiCsv(kind: 'kpis' | 'corridors') {
+    const token = window.localStorage.getItem(tokenStorageKey);
+    const response = await fetch(`${apiBaseUrl}/bi/exports/${kind}.csv${query}`, {
+      headers: token ? { Authorization: `Bearer ${token}` } : {},
+    });
+    if (!response.ok) {
+      setError('No se pudo exportar el CSV con los filtros actuales.');
+      return;
+    }
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = kind === 'kpis' ? 'fiducia-kpis.csv' : 'fiducia-corredores.csv';
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
+  if (isLoading) return <section className="panel text-sm text-slate-600">Cargando inteligencia de negocio...</section>;
+  if (error) return <StatusMessage message={error} type="error" />;
+
+  const current = overview?.current ?? {};
+  const changes = overview?.changes ?? {};
+  const sortedCorridors = [...corridors].sort((a, b) => {
+    if (sortBy === 'count') return b.remittance_count - a.remittance_count;
+    if (sortBy === 'amount') return Number(b.total_amount_usd_equivalent) - Number(a.total_amount_usd_equivalent);
+    return Number(b.commission_revenue_usd_equivalent) - Number(a.commission_revenue_usd_equivalent);
+  });
+  const trendBars = trends.map((item) => ({
+    label: item.period,
+    value: metricMode === 'remittances' ? item.remittances : Number(item.amount_usd_equivalent),
+    detail: metricMode === 'remittances' ? `${item.remittances} remesas` : `USD ${formatMoney(item.amount_usd_equivalent)}`,
+  }));
+  const revenueBars = trends.map((item) => ({
+    label: item.period,
+    value: Number(item.commission_revenue_usd_equivalent),
+    detail: `USD ${formatMoney(item.commission_revenue_usd_equivalent)}`,
+  }));
+
+  return (
+    <div className="grid gap-6">
+      <section className="panel">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fiducia-teal text-white">
+              <BarChart3 size={20} />
+            </div>
+            <div>
+              <h1 className="section-title">Inteligencia de negocio</h1>
+              <p className="text-sm text-slate-500">Indicadores y analitica ejecutiva</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="secondary-button" type="button" onClick={() => downloadBiCsv('kpis')}>
+              Exportar KPIs
+            </button>
+            <button className="secondary-button" type="button" onClick={() => downloadBiCsv('corridors')}>
+              Exportar corredores
+            </button>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-6">
+          <TextInput label="Desde" type="date" value={filters.date_from} onChange={(value) => setFilters({ ...filters, date_from: value })} required={false} />
+          <TextInput label="Hasta" type="date" value={filters.date_to} onChange={(value) => setFilters({ ...filters, date_to: value })} required={false} />
+          <SelectInput
+            label="Origen"
+            value={filters.origin_country}
+            onChange={(value) => setFilters({ ...filters, origin_country: value })}
+            options={[
+              { value: '', label: 'Todos' },
+              { value: 'Estados Unidos', label: 'Estados Unidos' },
+              { value: 'Guatemala', label: 'Guatemala' },
+            ]}
+          />
+          <SelectInput
+            label="Destino"
+            value={filters.destination_country}
+            onChange={(value) => setFilters({ ...filters, destination_country: value })}
+            options={[
+              { value: '', label: 'Todos' },
+              { value: 'Guatemala', label: 'Guatemala' },
+              { value: 'Estados Unidos', label: 'Estados Unidos' },
+            ]}
+          />
+          <SelectInput
+            label="Moneda"
+            value={filters.currency}
+            onChange={(value) => setFilters({ ...filters, currency: value })}
+            options={[
+              { value: '', label: 'Todas' },
+              { value: 'USD', label: 'USD' },
+              { value: 'GTQ', label: 'GTQ' },
+            ]}
+          />
+          <div className="flex items-end">
+            <button className="primary-button w-full" type="button" onClick={loadBI}>
+              Aplicar
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-4">
+        <ExecutiveMetric label="Remesas" value={String(current.total_remittances ?? 0)} change={changes.total_remittances?.percentage_change} />
+        <ExecutiveMetric label="Monto movilizado" value={`USD ${formatMaybeMoney(current.total_amount_usd_equivalent)}`} change={changes.total_amount_usd_equivalent?.percentage_change} />
+        <ExecutiveMetric label="Ingresos por comision" value={`USD ${formatMaybeMoney(current.total_commission_revenue_usd_equivalent)}`} change={changes.total_commission_revenue_usd_equivalent?.percentage_change} />
+        <ExecutiveMetric label="Ticket promedio" value={`USD ${formatMaybeMoney(current.average_ticket_usd_equivalent)}`} change={changes.average_ticket_usd_equivalent?.percentage_change} />
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-4">
+        <Metric label="Clientes activos" value={String(current.active_clients ?? 0)} />
+        <Metric label="Tasa de finalizacion" value={formatPercentValue(current.completion_rate)} />
+        <Metric label="Remesas en revision" value={String(operations?.review_required ?? 0)} />
+        <Metric label="Corredores activos" value={String(current.active_corridors ?? 0)} />
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-2">
+        <AnalyticsPanel title="Tendencia principal">
+          <div className="mb-4 flex gap-2">
+            <button className={metricMode === 'remittances' ? 'nav-button-active' : 'nav-button'} type="button" onClick={() => setMetricMode('remittances')}>
+              Remesas
+            </button>
+            <button className={metricMode === 'amount' ? 'nav-button-active' : 'nav-button'} type="button" onClick={() => setMetricMode('amount')}>
+              Monto
+            </button>
+          </div>
+          <SimpleBarChart items={trendBars} />
+        </AnalyticsPanel>
+
+        <AnalyticsPanel title="Ingresos por comision">
+          <SimpleBarChart items={revenueBars} />
+          <div className="mt-5">
+            <MiniList
+              title="Top corredores por revenue"
+              items={sortedCorridors.slice(0, 3).map((item) => `${item.corridor}: USD ${formatMoney(item.commission_revenue_usd_equivalent)}`)}
+            />
+          </div>
+        </AnalyticsPanel>
+      </section>
+
+      <AnalyticsPanel title="Indicadores destacados">
+        <div className="grid gap-3 md:grid-cols-2">
+          {(summary?.highlights ?? []).map((item) => (
+            <div className="rounded-lg border border-slate-200 bg-white p-4" key={item.code}>
+              <p className={item.priority === 'ATTENTION' ? 'text-sm font-semibold text-amber-700' : 'text-sm font-semibold text-fiducia-teal'}>
+                {item.priority}
+              </p>
+              <p className="mt-2 text-sm leading-6 text-slate-700">{item.message}</p>
+            </div>
+          ))}
+        </div>
+      </AnalyticsPanel>
+
+      <AnalyticsPanel title="Corredores">
+        <div className="mb-4 max-w-xs">
+          <SelectInput
+            label="Ordenar por"
+            value={sortBy}
+            onChange={(value) => setSortBy(value as 'commission' | 'count' | 'amount')}
+            options={[
+              { value: 'commission', label: 'Ingresos por comision' },
+              { value: 'count', label: 'Volumen de remesas' },
+              { value: 'amount', label: 'Monto movilizado' },
+            ]}
+          />
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm">
+            <thead className="text-slate-500">
+              <tr>
+                <th className="py-2 pr-3">Corredor</th>
+                <th className="py-2 pr-3">Remesas</th>
+                <th className="py-2 pr-3">Monto</th>
+                <th className="py-2 pr-3">Ticket</th>
+                <th className="py-2 pr-3">Revenue</th>
+                <th className="py-2 pr-3">Finalizacion</th>
+                <th className="py-2 pr-3">Riesgo alto</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedCorridors.map((item) => (
+                <tr className="border-t border-slate-100" key={item.corridor}>
+                  <td className="py-2 pr-3 font-semibold text-fiducia-navy">{item.corridor}</td>
+                  <td className="py-2 pr-3">{item.remittance_count}</td>
+                  <td className="py-2 pr-3">USD {formatMoney(item.total_amount_usd_equivalent)}</td>
+                  <td className="py-2 pr-3">USD {formatMaybeMoney(item.average_ticket_usd_equivalent)}</td>
+                  <td className="py-2 pr-3">USD {formatMoney(item.commission_revenue_usd_equivalent)}</td>
+                  <td className="py-2 pr-3">{formatPercentValue(item.completion_rate)}</td>
+                  <td className="py-2 pr-3">{formatPercentValue(item.risk_distribution.find((riskItem) => riskItem.risk_band === 'HIGH')?.share)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </AnalyticsPanel>
+
+      <section className="grid gap-6 lg:grid-cols-3">
+        <AnalyticsPanel title="Clientes">
+          <MiniList
+            title="Agregado"
+            items={[
+              `Activos: ${customers?.active_clients ?? 0}`,
+              `Nuevos: ${customers?.new_clients ?? 0}`,
+              `Recurrentes: ${customers?.returning_clients ?? 0}`,
+              `Remesas por cliente: ${formatMaybeRatio(customers?.remittances_per_client)}`,
+              `Repeat sender rate: ${formatPercentValue(customers?.repeat_sender_rate)}`,
+            ]}
+          />
+        </AnalyticsPanel>
+        <AnalyticsPanel title="Operaciones">
+          <SimpleBarChart items={(operations?.status_distribution ?? []).map((item) => ({ label: item.label, value: item.count, detail: String(item.count) }))} />
+        </AnalyticsPanel>
+        <AnalyticsPanel title="Riesgo agregado">
+          <SimpleBarChart items={(risk?.risk_distribution ?? []).map((item) => ({ label: item.label, value: item.count, detail: `${item.count} (${formatPercentValue(item.share)})` }))} />
+          <div className="mt-4 grid gap-3 md:grid-cols-2">
+            <Metric label="Score promedio" value={formatMaybeRatio(risk?.average_final_risk_score)} />
+            <Metric label="Revisiones" value={String(risk?.review_count ?? 0)} />
+          </div>
+        </AnalyticsPanel>
+      </section>
+
+      <AnalyticsPanel title="Perspectiva proximas semanas">
+        <div className="grid gap-3 md:grid-cols-5">
+          <Metric label="Modelo" value={forecast?.model_version ?? 'N/D'} />
+          <Metric label="Estado" value={forecast?.go_decision ?? 'N/D'} />
+          <Metric label="Horizonte" value={`${forecast?.horizon ?? 4} semanas`} />
+          <Metric label="Volumen 4s" value={formatMaybeMoney(forecast?.next_4_weeks_count)} />
+          <Metric label="Monto 4s" value={`USD ${formatMaybeMoney(forecast?.next_4_weeks_amount_usd)}`} />
+        </div>
+        <p className="mt-4 text-sm leading-6 text-slate-500">
+          Forecast experimental/conditional. Se muestra como perspectiva de planificacion y no modifica decisiones de riesgo.
+        </p>
+      </AnalyticsPanel>
     </div>
   );
 }
@@ -2760,6 +3128,20 @@ function Metric({ label, value }: { label: string; value: string }) {
   );
 }
 
+function ExecutiveMetric({ label, value, change }: { label: string; value: string; change?: string | null }) {
+  const numericChange = change == null ? null : Number(change);
+  const changeLabel = numericChange == null ? 'Sin periodo previo' : `${numericChange >= 0 ? '+' : ''}${(numericChange * 100).toLocaleString('es-GT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white p-4">
+      <p className="text-sm text-slate-500">{label}</p>
+      <p className="mt-2 text-2xl font-bold text-fiducia-navy">{value}</p>
+      <p className={numericChange != null && numericChange < 0 ? 'mt-2 text-sm font-semibold text-amber-700' : 'mt-2 text-sm font-semibold text-fiducia-teal'}>
+        {changeLabel}
+      </p>
+    </div>
+  );
+}
+
 function AnalyticsPanel({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="panel">
@@ -2987,6 +3369,21 @@ function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; 
       <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
     </div>
   );
+}
+
+function formatMaybeMoney(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return 'N/D';
+  return formatMoney(value);
+}
+
+function formatPercentValue(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return 'N/D';
+  return `${(Number(value) * 100).toLocaleString('es-GT', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
+}
+
+function formatMaybeRatio(value: string | number | null | undefined) {
+  if (value === null || value === undefined) return 'N/D';
+  return Number(value).toLocaleString('es-GT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function formatMoney(value: string | number) {

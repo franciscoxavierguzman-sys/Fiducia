@@ -1024,6 +1024,12 @@ Estado: completada.
 
 Se implementa `remittance-forecast-v1` para pronostico semanal experimental de `transaction_count` y `transaction_amount_usd`. La decision metodologica del dataset es `CONDITIONAL` por tratarse de datos sinteticos con 18 meses de historia. El modulo usa split cronologico, walk-forward validation, baselines, comparacion de modelos, artefactos versionados, API protegida y frontend `Analitica predictiva`.
 
+## Fase 7 - Business Intelligence
+
+Estado: implementada sobre Fases 1-6 en rama `phase7-business-intelligence`.
+
+Incluye catalogo central de KPIs, formulas documentadas, comparacion temporal, revenue con comisiones historicas, multimoneda en USD equivalente, corredores, clientes agregados, operaciones, riesgo agregado, forecast ejecutivo, insights deterministricos, export CSV y frontend `Inteligencia de negocio`. No crea modelos nuevos, no recalcula riesgo y no reentrena forecasting.
+
 ## 20. Criterios globales de calidad
 
 Para considerar FIDUCIA listo como prototipo academico:

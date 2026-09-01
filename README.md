@@ -223,3 +223,17 @@ Comandos:
 ```
 
 La vista `Analitica predictiva` esta disponible para `ADMIN` y `RISK_ANALYST`.
+
+## Business Intelligence Fase 7
+
+La vista `Inteligencia de negocio` esta disponible para `ADMIN` y `RISK_ANALYST`. Integra KPIs ejecutivos, tendencias, revenue, corredores, clientes agregados, operaciones, riesgo agregado, forecast resumido e insights deterministricos.
+
+Endpoints utiles:
+
+```text
+GET /api/v1/bi/overview
+GET /api/v1/bi/corridors
+GET /api/v1/bi/executive-summary
+GET /api/v1/bi/exports/kpis.csv
+GET /api/v1/bi/exports/corridors.csv
+```
