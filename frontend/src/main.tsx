@@ -927,7 +927,7 @@ function LandingLogin(props: {
   onLogin: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <section className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[1.2fr_0.8fr]">
+    <section className="mx-auto grid max-w-6xl items-start gap-8 px-6 py-12 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="flex flex-col justify-center">
         <img
           src={fiduciaLogo}
