@@ -106,6 +106,15 @@ En Windows tambien puedes ejecutar:
 5. Vuelve al login.
 6. Inicia sesion con el correo y contrasena creados.
 
+## Probar recuperacion de contrasena
+
+1. En la pantalla de login usa `Olvide mi contrasena`.
+2. Ingresa un correo registrado.
+3. FIDUCIA genera una contrasena temporal y registra un correo simulado en `database/mail_outbox.jsonl`.
+4. En entorno local, la interfaz muestra la contrasena temporal para facilitar la demo.
+5. Inicia sesion con esa contrasena temporal.
+6. El sistema solicita crear una nueva contrasena antes de permitir navegar por la plataforma.
+
 ## Probar una remesa enviada
 
 1. Inicia sesion.
@@ -256,6 +265,7 @@ Endpoints utiles:
 ```text
 GET /api/v1/blockchain/info
 GET /api/v1/blockchain/metrics
+GET /api/v1/blockchain/overview
 GET /api/v1/blockchain/blocks
 GET /api/v1/blockchain/blocks/{block_index}
 GET /api/v1/blockchain/transactions/{remittance_id}/history
@@ -263,7 +273,7 @@ GET /api/v1/blockchain/verify/{remittance_id}
 GET /api/v1/blockchain/validate
 ```
 
-`ADMIN` puede listar, verificar y validar la cadena completa. `RISK_ANALYST` puede consultar evidencia y verificar remesas. `CLIENT` solo puede consultar historial y verificacion de sus propias remesas.
+`ADMIN` puede listar, verificar y validar la cadena completa. `RISK_ANALYST` puede consultar evidencia y verificar remesas. `CLIENT` solo puede consultar historial y verificacion de sus propias remesas. `GET /api/v1/blockchain/overview` agrupa `info`, `metrics` y `blocks` para la interfaz web.
 
 La idempotencia de remesas usa entidad, referencia, evento y schema. La idempotencia de riesgo usa `risk_assessment_id` para permitir multiples evaluaciones legitimas sobre una misma remesa. La escritura se serializa con un lock local dentro de una instancia; no es una garantia distribuida.
 

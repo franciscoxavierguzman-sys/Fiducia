@@ -50,3 +50,9 @@ class BlockchainMetrics(BaseModel):
     chain_valid: bool
     last_block_timestamp: str | None
     average_mining_time_ms: float | None
+
+
+class BlockchainOverview(BaseModel):
+    info: BlockchainInfo
+    metrics: BlockchainMetrics
+    blocks: list[BlockchainBlockRead]

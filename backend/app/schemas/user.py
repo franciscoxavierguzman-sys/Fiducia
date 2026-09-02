@@ -92,7 +92,7 @@ class UserRead(BaseModel):
     id: int
     first_name: str
     last_name: str
-    email: EmailStr
+    email: str
     phone: str
     country: str
     document_type: str | None
@@ -100,5 +100,6 @@ class UserRead(BaseModel):
     birth_date: date | None
     occupation: str | None
     is_active: bool
+    must_change_password: bool
     created_at: datetime
     role: RoleRead

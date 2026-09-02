@@ -17,6 +17,7 @@ class User(Base):
     phone: Mapped[str] = mapped_column(String(30), nullable=False)
     country: Mapped[str] = mapped_column(String(100), nullable=False)
     password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
+    must_change_password: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     document_type: Mapped[str | None] = mapped_column(String(30), nullable=True)
     fictitious_document_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     birth_date: Mapped[date | None] = mapped_column(Date, nullable=True)

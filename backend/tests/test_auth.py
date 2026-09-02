@@ -1,3 +1,13 @@
+from datetime import date
+
+from sqlalchemy import select
+
+from app.db.session import SessionLocal
+from app.models.role import Role
+from app.models.user import User
+from app.security.passwords import hash_password
+
+
 def test_register_login_and_read_me(client):
     user_payload = {
         "first_name": "Ana",
@@ -36,6 +46,40 @@ def test_register_login_and_read_me(client):
     me_response = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
     assert me_response.status_code == 200
     assert me_response.json()["email"] == "ana@example.com"
+
+
+def test_legacy_local_domain_user_can_login_and_read_session(client):
+    with SessionLocal() as db:
+        role = db.scalar(select(Role).where(Role.name == "RISK_ANALYST"))
+        assert role is not None
+        db.add(
+            User(
+                first_name="Analista",
+                last_name="Legacy",
+                email="analista@fiducia.local",
+                phone="55550000",
+                country="Guatemala",
+                password_hash=hash_password("Password123"),
+                role_id=role.id,
+                document_type="DPI",
+                fictitious_document_id="1234567890123",
+                birth_date=date(1995, 5, 15),
+                occupation="Riesgo",
+            )
+        )
+        db.commit()
+
+    login_response = client.post(
+        "/api/v1/auth/login",
+        json={"email": "analista@fiducia.local", "password": "Password123"},
+    )
+    assert login_response.status_code == 200
+    token = login_response.json()["access_token"]
+
+    me_response = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    assert me_response.status_code == 200
+    assert me_response.json()["email"] == "analista@fiducia.local"
+    assert me_response.json()["role"]["name"] == "RISK_ANALYST"
 
 
 def test_protected_endpoint_rejects_missing_token(client):
@@ -81,6 +125,69 @@ def test_login_rejects_unknown_user(client):
     )
     assert response.status_code == 401
     assert response.json()["detail"]["code"] == "INVALID_CREDENTIALS"
+
+
+def test_forgot_password_sends_temporary_password_and_forces_change(client, monkeypatch):
+    deliveries = []
+
+    def fake_send_password_reset_email(*, recipient: str, temporary_password: str) -> dict[str, str]:
+        deliveries.append({"recipient": recipient, "temporary_password": temporary_password})
+        return {"delivery": "simulated_email", "outbox": "test-outbox"}
+
+    monkeypatch.setattr("app.api.v1.endpoints.auth.send_password_reset_email", fake_send_password_reset_email)
+    payload = {
+        "first_name": "Reset",
+        "last_name": "User",
+        "email": "reset@example.com",
+        "phone": "55551234",
+        "country": "Guatemala",
+        "password": "Password123",
+        "confirm_password": "Password123",
+        "terms_accepted": True,
+        "human_check_accepted": True,
+        "document_type": "DPI",
+        "fictitious_document_id": "1234567890123",
+        "birth_date": "1995-05-15",
+    }
+    assert client.post("/api/v1/auth/register", json=payload).status_code == 201
+
+    reset_response = client.post("/api/v1/auth/password/forgot", json={"email": "reset@example.com"})
+    assert reset_response.status_code == 200
+    assert reset_response.json()["temporary_password"] == deliveries[0]["temporary_password"]
+
+    old_login = client.post("/api/v1/auth/login", json={"email": "reset@example.com", "password": "Password123"})
+    assert old_login.status_code == 401
+
+    temporary_login = client.post(
+        "/api/v1/auth/login",
+        json={"email": "reset@example.com", "password": deliveries[0]["temporary_password"]},
+    )
+    assert temporary_login.status_code == 200
+    assert temporary_login.json()["must_change_password"] is True
+    token = temporary_login.json()["access_token"]
+
+    me_response = client.get("/api/v1/users/me", headers={"Authorization": f"Bearer {token}"})
+    assert me_response.status_code == 200
+    assert me_response.json()["must_change_password"] is True
+
+    change_response = client.post(
+        "/api/v1/auth/password/change",
+        headers={"Authorization": f"Bearer {token}"},
+        json={"new_password": "NewPassword123", "confirm_password": "NewPassword123"},
+    )
+    assert change_response.status_code == 200
+    assert change_response.json()["must_change_password"] is False
+
+    final_login = client.post("/api/v1/auth/login", json={"email": "reset@example.com", "password": "NewPassword123"})
+    assert final_login.status_code == 200
+    assert final_login.json()["must_change_password"] is False
+
+
+def test_forgot_password_unknown_email_uses_generic_response(client):
+    response = client.post("/api/v1/auth/password/forgot", json={"email": "unknown-reset@example.com"})
+    assert response.status_code == 200
+    assert response.json()["temporary_password"] is None
+    assert "Si el correo esta registrado" in response.json()["message"]
 
 
 def test_duplicate_email_is_rejected(client):

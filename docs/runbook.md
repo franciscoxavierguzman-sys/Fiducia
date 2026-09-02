@@ -24,6 +24,16 @@ El asistente cae al proveedor deterministico. Revisar variables `ASSISTANT_PROVI
 
 Usar la demo aislada de tampering solo fuera de la DB principal. Si falla en datos reales de demo, revisar eventos de auditoria y hashes.
 
+## Remesa sin evidencia blockchain
+
+Si una remesa existente devuelve `NOT_FOUND` en verificacion blockchain, revisar primero que la tabla `blockchain_blocks` tenga bloques de evidencia. Para datos demo creados antes de activar la capa blockchain, ejecutar desde la raiz del proyecto:
+
+```powershell
+.\backend\.venv\Scripts\python.exe scripts\backfill_blockchain_evidence.py
+```
+
+El proceso es idempotente: no duplica evidencias existentes y valida la cadena al finalizar.
+
 ## Error 429 en login
 
 Esperar un minuto o usar credenciales correctas. Es una proteccion in-process de prototipo.

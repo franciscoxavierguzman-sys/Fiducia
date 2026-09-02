@@ -236,6 +236,16 @@ def test_blockchain_permissions_and_safe_client_traceability(client):
     analyst_blocks = client.get("/api/v1/blockchain/blocks", headers=analyst_headers)
     assert analyst_blocks.status_code == 200
 
+    client_overview = client.get("/api/v1/blockchain/overview", headers=sender_headers)
+    assert client_overview.status_code == 403
+
+    analyst_overview = client.get("/api/v1/blockchain/overview", headers=analyst_headers)
+    assert analyst_overview.status_code == 200
+    overview = analyst_overview.json()
+    assert overview["info"]["chain_valid"] is True
+    assert overview["metrics"]["total_blocks"] >= 1
+    assert len(overview["blocks"]) >= 1
+
     admin_validate = client.get("/api/v1/blockchain/validate", headers=admin_headers)
     assert admin_validate.status_code == 200
 
@@ -249,6 +259,33 @@ def test_blockchain_permissions_and_safe_client_traceability(client):
 
     other_history = client.get(f"/api/v1/blockchain/transactions/{transaction['id']}/history", headers=other_headers)
     assert other_history.status_code == 404
+
+
+def test_blockchain_backfill_records_legacy_remittances(client):
+    from app.services.blockchain import backfill_blockchain_evidence
+
+    _, headers = register_and_login(client, "backfill-sender@example.com")
+    beneficiary = create_beneficiary(client, headers, email="backfill-beneficiary@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    with SessionLocal() as db:
+        db.query(BlockchainBlock).delete()
+        db.commit()
+
+    missing = client.get(f"/api/v1/blockchain/verify/{transaction['id']}", headers=headers)
+    assert missing.status_code == 200
+    assert missing.json()["status"] == "NOT_FOUND"
+
+    with SessionLocal() as db:
+        result = backfill_blockchain_evidence(db)
+        db.commit()
+
+    assert result["transactions_scanned"] == 1
+    assert result["blocks_created"] >= 4
+
+    verified = client.get(f"/api/v1/blockchain/verify/{transaction['id']}", headers=headers)
+    assert verified.status_code == 200
+    assert verified.json()["status"] == "VERIFIED"
 
 
 def test_blockchain_failure_does_not_break_remittance_flow(client, monkeypatch):

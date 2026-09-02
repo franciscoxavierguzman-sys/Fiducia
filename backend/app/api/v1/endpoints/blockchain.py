@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.blockchain import BlockchainBlockRead, BlockchainInfo, BlockchainMetrics, ChainValidationResult, EvidenceVerificationResult
+from app.schemas.blockchain import BlockchainBlockRead, BlockchainInfo, BlockchainMetrics, BlockchainOverview, ChainValidationResult, EvidenceVerificationResult
 from app.services.blockchain import (
     blockchain_info,
     blockchain_metrics,
@@ -40,6 +40,15 @@ def read_blockchain_info(_: User = Depends(require_blockchain_audit_access), db:
 @router.get("/metrics", response_model=BlockchainMetrics)
 def read_blockchain_metrics(_: User = Depends(require_blockchain_audit_access), db: Session = Depends(get_db)) -> dict:
     return blockchain_metrics(db)
+
+
+@router.get("/overview", response_model=BlockchainOverview)
+def read_blockchain_overview(_: User = Depends(require_blockchain_audit_access), db: Session = Depends(get_db)) -> dict:
+    return {
+        "info": blockchain_info(db),
+        "metrics": blockchain_metrics(db),
+        "blocks": list_blocks(db),
+    }
 
 
 @router.get("/blocks", response_model=list[BlockchainBlockRead])

@@ -7,6 +7,8 @@ La API usa el prefijo versionado `/api/v1`.
 ```text
 POST /api/v1/auth/register
 POST /api/v1/auth/login
+POST /api/v1/auth/password/forgot
+POST /api/v1/auth/password/change
 GET  /api/v1/users/me
 PATCH /api/v1/users/me
 ```
@@ -14,6 +16,8 @@ PATCH /api/v1/users/me
 Los endpoints funcionales de Fase 2 requieren token Bearer.
 
 El registro crea usuarios `CLIENT` y requiere confirmacion de contrasena, aceptacion de terminos, verificacion humana simulada, tipo de documento, numero de documento y fecha de nacimiento. Para `DPI`, el numero debe contener exactamente 13 digitos. Para `PASSPORT`, el numero acepta de 6 a 20 caracteres alfanumericos o guiones.
+
+La recuperacion de contrasena genera una contrasena temporal para correos registrados, marca al usuario con cambio obligatorio y registra un correo simulado en `database/mail_outbox.jsonl`. En entorno local de demostracion la respuesta puede incluir la contrasena temporal para facilitar la prueba. Al iniciar sesion con esa contrasena, el frontend solicita definir una nueva antes de continuar.
 
 ## Catalogos
 
@@ -293,6 +297,7 @@ Endpoints protegidos por autenticacion:
 ```text
 GET /api/v1/blockchain/info
 GET /api/v1/blockchain/metrics
+GET /api/v1/blockchain/overview
 GET /api/v1/blockchain/blocks
 GET /api/v1/blockchain/blocks/{block_index}
 GET /api/v1/blockchain/transactions/{remittance_id}/history
@@ -306,7 +311,7 @@ Permisos:
 - `RISK_ANALYST`: consulta de bloques, metricas, historial y verificacion de remesa.
 - `CLIENT`: historial y verificacion solo sobre remesas propias; no puede listar ni validar la cadena completa.
 
-Los endpoints devuelven metadatos tecnicos, hashes SHA-256, enlaces entre bloques, nonce, dificultad y estado de validacion. No devuelven PII, numeros completos de cuentas, tarjetas, documentos, CVV, contrasenas ni tokens.
+Los endpoints devuelven metadatos tecnicos, hashes SHA-256, enlaces entre bloques, nonce, dificultad y estado de validacion. `GET /api/v1/blockchain/overview` entrega en una sola respuesta `info`, `metrics` y `blocks` para consumo de la interfaz web. No devuelven PII, numeros completos de cuentas, tarjetas, documentos, CVV, contrasenas ni tokens.
 
 La validacion de evidencia reconstruye el hash canonico desde la remesa o evaluacion de riesgo operacional y lo compara contra el hash registrado en la cadena local. Si la capa blockchain falla durante una operacion, se registra auditoria y la remesa conserva su flujo transaccional normal.
 

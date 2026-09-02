@@ -14,6 +14,8 @@ def ensure_sqlite_schema_compatibility() -> None:
             columns = {column["name"] for column in inspector.get_columns("users")}
             if "document_type" not in columns:
                 connection.execute(text("ALTER TABLE users ADD COLUMN document_type VARCHAR(30)"))
+            if "must_change_password" not in columns:
+                connection.execute(text("ALTER TABLE users ADD COLUMN must_change_password BOOLEAN NOT NULL DEFAULT 0"))
 
         if "countries" in table_names:
             columns = {column["name"] for column in inspector.get_columns("countries")}

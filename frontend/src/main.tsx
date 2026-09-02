@@ -127,6 +127,7 @@ type User = {
   fictitious_document_id: string | null;
   birth_date: string | null;
   occupation: string | null;
+  must_change_password: boolean;
   role: Role;
 };
 type FundingSource = {
@@ -495,6 +496,11 @@ type BlockchainVerification = {
   verified: number;
   mismatches: Array<{ block_index: number; expected_hash?: string; recorded_hash?: string }>;
 };
+type BlockchainOverview = {
+  info: BlockchainInfo;
+  metrics: BlockchainMetrics;
+  blocks: BlockchainBlock[];
+};
 type AssistantChatMessage = {
   id?: number;
   role: 'user' | 'assistant';
@@ -543,8 +549,9 @@ type View =
   | 'risk'
   | 'risk-review'
   | 'blockchain'
-  | 'forecasting';
-type AuthMode = 'login' | 'register';
+  | 'forecasting'
+  | 'password-change';
+type AuthMode = 'login' | 'register' | 'forgot';
 type MessageType = 'error' | 'success';
 type RegisterFormState = {
   first_name: string;
@@ -589,6 +596,14 @@ function App() {
   const canViewAnalytics = currentUser?.role.name === 'ADMIN' || currentUser?.role.name === 'RISK_ANALYST';
 
   React.useEffect(() => {
+    const internalViews: View[] = ['bi', 'analytics', 'forecasting', 'risk', 'risk-review', 'blockchain'];
+    if (currentUser && !canViewAnalytics && internalViews.includes(view)) {
+      setView('dashboard');
+      showMessage('Esta vista esta reservada para perfiles internos autorizados.', 'error');
+    }
+  }, [canViewAnalytics, currentUser, view]);
+
+  React.useEffect(() => {
     const storedToken = window.localStorage.getItem(tokenStorageKey);
     if (!storedToken) {
       setIsCheckingSession(false);
@@ -619,6 +634,7 @@ function App() {
     try {
       const user = await apiRequest<User>('/users/me', {}, authToken);
       setCurrentUser(user);
+      if (user.must_change_password) setView('password-change');
       await refreshClientData(authToken);
       return true;
     } catch {
@@ -656,7 +672,7 @@ function App() {
     setIsLoading(true);
     setMessage(null);
     try {
-      const body = await apiRequest<{ access_token: string }>('/auth/login', {
+      const body = await apiRequest<{ access_token: string; must_change_password: boolean }>('/auth/login', {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
@@ -664,8 +680,13 @@ function App() {
       setToken(body.access_token);
       const sessionReady = await validateSession(body.access_token);
       if (!sessionReady) return;
-      setView('dashboard');
-      showMessage('Sesion iniciada correctamente.', 'success');
+      if (body.must_change_password) {
+        setView('password-change');
+        showMessage('Ingresa una nueva contrasena para completar la recuperacion.', 'success');
+      } else {
+        setView('dashboard');
+        showMessage('Sesion iniciada correctamente.', 'success');
+      }
     } catch (error) {
       const code = error instanceof Error ? error.message : '';
       if (code === 'INVALID_CREDENTIALS') {
@@ -721,6 +742,7 @@ function App() {
       <Header currentUser={currentUser} onLogout={handleLogout} />
       {currentUser ? (
         <section className="mx-auto max-w-7xl px-6 py-8">
+          {!currentUser.must_change_password ? (
           <nav className="mb-6 flex flex-wrap gap-2">
             <NavButton active={view === 'dashboard'} onClick={() => setView('dashboard')} label="Inicio" />
             <NavButton active={view === 'assistant'} onClick={() => setView('assistant')} label="Asistente" />
@@ -750,8 +772,20 @@ function App() {
             ) : null}
             <NavButton active={view === 'profile'} onClick={() => setView('profile')} label="Mi perfil" />
           </nav>
+          ) : null}
           {message ? <StatusMessage message={message} type={messageType} /> : null}
-          {view === 'dashboard' ? (
+          {currentUser.must_change_password ? (
+            <PasswordChangeView
+              onChanged={(user) => {
+                setCurrentUser(user);
+                setPassword('');
+                setView('dashboard');
+                showMessage('Contrasena actualizada correctamente.', 'success');
+              }}
+              showMessage={showMessage}
+            />
+          ) : null}
+          {!currentUser.must_change_password && view === 'dashboard' ? (
             <Dashboard
               user={currentUser}
               beneficiaries={beneficiaries}
@@ -766,8 +800,8 @@ function App() {
               onProfile={() => setView('profile')}
             />
           ) : null}
-          {view === 'assistant' ? <AssistantView user={currentUser} /> : null}
-          {view === 'beneficiaries' ? (
+          {!currentUser.must_change_password && view === 'assistant' ? <AssistantView user={currentUser} /> : null}
+          {!currentUser.must_change_password && view === 'beneficiaries' ? (
             <BeneficiariesView
               beneficiaries={beneficiaries}
               corridors={corridors}
@@ -776,7 +810,7 @@ function App() {
               showMessage={showMessage}
             />
           ) : null}
-          {view === 'new-remittance' ? (
+          {!currentUser.must_change_password && view === 'new-remittance' ? (
             <NewRemittanceView
               beneficiaries={beneficiaries.filter((beneficiary) => beneficiary.is_active)}
               fundingSources={fundingSources.filter((source) => source.is_active)}
@@ -787,7 +821,7 @@ function App() {
               onManageFunding={() => setView('funding')}
             />
           ) : null}
-          {view === 'funding' ? (
+          {!currentUser.must_change_password && view === 'funding' ? (
             <FundingSourcesView
               user={currentUser}
               fundingSources={fundingSources}
@@ -795,17 +829,17 @@ function App() {
               showMessage={showMessage}
             />
           ) : null}
-          {view === 'tracking' ? <TrackingView showMessage={showMessage} /> : null}
-          {view === 'bi' && canViewAnalytics ? <BusinessIntelligenceView /> : null}
-          {view === 'analytics' && canViewAnalytics ? <AnalyticsView /> : null}
-          {view === 'forecasting' && canViewAnalytics ? <ForecastingView /> : null}
-          {view === 'risk' && canViewAnalytics ? <RiskIntelligenceView /> : null}
-          {view === 'risk-review' && canViewAnalytics ? <RiskReviewView showMessage={showMessage} /> : null}
-          {view === 'blockchain' && canViewAnalytics ? <BlockchainView user={currentUser} transactions={[...transactions, ...receivedTransactions]} /> : null}
-          {view === 'profile' ? (
+          {!currentUser.must_change_password && view === 'tracking' ? <TrackingView showMessage={showMessage} /> : null}
+          {!currentUser.must_change_password && view === 'bi' && canViewAnalytics ? <BusinessIntelligenceView /> : null}
+          {!currentUser.must_change_password && view === 'analytics' && canViewAnalytics ? <AnalyticsView /> : null}
+          {!currentUser.must_change_password && view === 'forecasting' && canViewAnalytics ? <ForecastingView /> : null}
+          {!currentUser.must_change_password && view === 'risk' && canViewAnalytics ? <RiskIntelligenceView /> : null}
+          {!currentUser.must_change_password && view === 'risk-review' && canViewAnalytics ? <RiskReviewView showMessage={showMessage} /> : null}
+          {!currentUser.must_change_password && view === 'blockchain' && canViewAnalytics ? <BlockchainView user={currentUser} transactions={[...transactions, ...receivedTransactions]} /> : null}
+          {!currentUser.must_change_password && view === 'profile' ? (
             <ProfileView user={currentUser} onUpdated={(user) => setCurrentUser(user)} showMessage={showMessage} />
           ) : null}
-          {view === 'sent' ? (
+          {!currentUser.must_change_password && view === 'sent' ? (
             <HistoryView
               title="Remesas enviadas"
               emptyText="Aun no has enviado remesas."
@@ -817,7 +851,7 @@ function App() {
               }}
             />
           ) : null}
-          {view === 'received' ? (
+          {!currentUser.must_change_password && view === 'received' ? (
             <HistoryView
               title="Remesas recibidas"
               emptyText="Aun no tienes remesas recibidas."
@@ -829,7 +863,7 @@ function App() {
               }}
             />
           ) : null}
-          {view === 'detail' && selectedTransaction ? (
+          {!currentUser.must_change_password && view === 'detail' && selectedTransaction ? (
             <TransactionDetail currentUser={currentUser} transaction={selectedTransaction} onReceive={handleReceiveTransaction} />
           ) : null}
         </section>
@@ -908,7 +942,9 @@ function LandingLogin(props: {
           <Feature icon={<BarChart3 />} title="Remesas" text="Cotizacion y trazabilidad." />
         </div>
       </div>
-      {props.authMode === 'login' ? <LoginPanel {...props} /> : <RegisterPanel setAuthMode={props.setAuthMode} />}
+      {props.authMode === 'login' ? <LoginPanel {...props} /> : null}
+      {props.authMode === 'forgot' ? <ForgotPasswordPanel setAuthMode={props.setAuthMode} /> : null}
+      {props.authMode === 'register' ? <RegisterPanel setAuthMode={props.setAuthMode} /> : null}
     </section>
   );
 }
@@ -956,6 +992,63 @@ function LoginPanel({
       </form>
       <button className="mt-4 w-full text-sm font-semibold text-fiducia-teal" type="button" onClick={() => setAuthMode('register')}>
         Crear cuenta
+      </button>
+      <button className="mt-3 w-full text-sm font-semibold text-slate-500 hover:text-fiducia-teal" type="button" onClick={() => setAuthMode('forgot')}>
+        Olvide mi contrasena
+      </button>
+      {message ? <StatusMessage message={message} type={messageType} /> : null}
+    </div>
+  );
+}
+
+function ForgotPasswordPanel({ setAuthMode }: { setAuthMode: (mode: AuthMode) => void }) {
+  const [email, setEmail] = React.useState('');
+  const [isSending, setIsSending] = React.useState(false);
+  const [message, setMessage] = React.useState<string | null>(null);
+  const [messageType, setMessageType] = React.useState<MessageType>('success');
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setIsSending(true);
+    setMessage(null);
+    try {
+      const response = await request<{ message: string; temporary_password?: string | null }>('/auth/password/forgot', {
+        method: 'POST',
+        body: JSON.stringify({ email }),
+      });
+      setMessage(
+        response.temporary_password
+          ? `${response.message} En esta demo, la contrasena temporal enviada es: ${response.temporary_password}`
+          : response.message,
+      );
+      setMessageType('success');
+    } catch {
+      setMessage('No se pudo procesar la recuperacion. Verifica el correo e intenta de nuevo.');
+      setMessageType('error');
+    } finally {
+      setIsSending(false);
+    }
+  }
+
+  return (
+    <div className="panel">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fiducia-teal text-white">
+          <ShieldCheck size={20} />
+        </div>
+        <div>
+          <h2 className="text-xl font-semibold text-fiducia-navy">Recuperar acceso</h2>
+          <p className="text-sm text-slate-500">Enviaremos una contrasena temporal al correo registrado.</p>
+        </div>
+      </div>
+      <form className="space-y-4" onSubmit={submit}>
+        <TextInput label="Correo electronico" type="email" value={email} onChange={setEmail} placeholder="tu@email.com" />
+        <button className="primary-button w-full" type="submit" disabled={isSending}>
+          {isSending ? 'Enviando...' : 'Enviar recuperacion'}
+        </button>
+      </form>
+      <button className="mt-4 w-full text-sm font-semibold text-fiducia-teal" type="button" onClick={() => setAuthMode('login')}>
+        Volver al login
       </button>
       {message ? <StatusMessage message={message} type={messageType} /> : null}
     </div>
@@ -1117,6 +1210,62 @@ function RegisterPanel({ setAuthMode }: { setAuthMode: (mode: AuthMode) => void 
       {message ? <StatusMessage message={message} type={messageType} /> : null}
       {isTermsOpen ? <TermsModal onClose={() => setIsTermsOpen(false)} /> : null}
     </div>
+  );
+}
+
+function PasswordChangeView({ onChanged, showMessage }: { onChanged: (user: User) => void; showMessage: (text: string, type: MessageType) => void }) {
+  const [newPassword, setNewPassword] = React.useState('');
+  const [confirmPassword, setConfirmPassword] = React.useState('');
+  const [isSaving, setIsSaving] = React.useState(false);
+
+  async function submit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (newPassword.length < 8) {
+      showMessage('La nueva contrasena debe tener minimo 8 caracteres.', 'error');
+      return;
+    }
+    if (!/[A-Za-z]/.test(newPassword) || !/\d/.test(newPassword)) {
+      showMessage('La nueva contrasena debe incluir letras y numeros.', 'error');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      showMessage('La confirmacion de contrasena no coincide.', 'error');
+      return;
+    }
+    setIsSaving(true);
+    try {
+      const user = await request<User>('/auth/password/change', {
+        method: 'POST',
+        body: JSON.stringify({ new_password: newPassword, confirm_password: confirmPassword }),
+      });
+      onChanged(user);
+    } catch {
+      showMessage('No se pudo actualizar la contrasena. Intenta nuevamente.', 'error');
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  return (
+    <section className="panel mx-auto max-w-xl">
+      <div className="mb-6 flex items-center gap-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fiducia-teal text-white">
+          <ShieldCheck size={20} />
+        </div>
+        <div>
+          <h1 className="section-title">Crear nueva contrasena</h1>
+          <p className="text-sm text-slate-500">Por seguridad, debes definir una nueva contrasena antes de continuar.</p>
+        </div>
+      </div>
+      <form className="grid gap-4" onSubmit={submit}>
+        <TextInput label="Nueva contrasena" type="password" value={newPassword} onChange={setNewPassword} minLength={8} />
+        <TextInput label="Confirmar nueva contrasena" type="password" value={confirmPassword} onChange={setConfirmPassword} minLength={8} />
+        <p className="-mt-2 text-xs leading-5 text-slate-500">Usa minimo 8 caracteres e incluye letras y numeros.</p>
+        <button className="primary-button" type="submit" disabled={isSaving}>
+          {isSaving ? 'Actualizando...' : 'Guardar nueva contrasena'}
+        </button>
+      </form>
+    </section>
   );
 }
 
@@ -1973,6 +2122,16 @@ function RiskIntelligenceView() {
   );
 }
 
+function describeRequestFailure(error: unknown): string {
+  if (error instanceof ApiRequestError) {
+    if (error.status === 401) return 'sesion expirada o token invalido';
+    if (error.status === 403) return 'permisos insuficientes para este perfil';
+    return `backend respondio ${error.status} (${error.code})`;
+  }
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return 'error de conexion no identificado';
+}
+
 function BlockchainView({ user, transactions }: { user: User; transactions: Transaction[] }) {
   const [info, setInfo] = React.useState<BlockchainInfo | null>(null);
   const [metrics, setMetrics] = React.useState<BlockchainMetrics | null>(null);
@@ -1993,23 +2152,24 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
       setIsLoading(true);
       setError(null);
       try {
-        const [infoData, metricsData, blockData] = await Promise.all([
-          request<BlockchainInfo>('/blockchain/info'),
-          request<BlockchainMetrics>('/blockchain/metrics'),
-          request<BlockchainBlock[]>('/blockchain/blocks'),
-        ]);
-        const validationData = isAdmin ? await request<BlockchainValidation>('/blockchain/validate') : null;
+        const overview = await request<BlockchainOverview>('/blockchain/overview');
         if (!isMounted) return;
-        setInfo(infoData);
-        setMetrics(metricsData);
-        setBlocks(blockData);
-        setSelectedBlock(blockData[blockData.length - 1] ?? null);
-        setValidation(validationData);
-      } catch {
-        if (isMounted) setError('No se pudo cargar la trazabilidad blockchain. Verifica permisos y backend activo.');
-      } finally {
-        if (isMounted) setIsLoading(false);
+        setInfo(overview.info);
+        setMetrics(overview.metrics);
+        setBlocks(overview.blocks);
+        setSelectedBlock(overview.blocks[overview.blocks.length - 1] ?? null);
+        if (isAdmin) {
+          try {
+            const validationData = await request<BlockchainValidation>('/blockchain/validate');
+            if (isMounted) setValidation(validationData);
+          } catch (validationError) {
+            setError(`No se pudo cargar la validacion completa. Detalle: ${describeRequestFailure(validationError)}`);
+          }
+        }
+      } catch (loadError) {
+        if (isMounted) setError(`No se pudo cargar la trazabilidad blockchain. Detalle: ${describeRequestFailure(loadError)}`);
       }
+      if (isMounted) setIsLoading(false);
     }
     loadBlockchain();
     return () => {

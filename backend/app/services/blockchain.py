@@ -65,6 +65,33 @@ def record_risk_event(db: Session, assessment: RiskAssessment, actor_user_id: in
         return None
 
 
+def backfill_blockchain_evidence(db: Session, actor_user_id: int | None = None) -> dict[str, int]:
+    before_count = db.query(BlockchainBlock).count()
+    transactions = list(db.scalars(select(Transaction).order_by(Transaction.id)))
+    assessments = list(db.scalars(select(RiskAssessment).order_by(RiskAssessment.remittance_id, RiskAssessment.assessment_sequence, RiskAssessment.id)))
+    assessments_by_transaction: dict[int, list[RiskAssessment]] = {}
+    for assessment in assessments:
+        assessments_by_transaction.setdefault(assessment.remittance_id, []).append(assessment)
+
+    for transaction in transactions:
+        record_remittance_event(db, transaction, "REMITTANCE_CREATED", actor_user_id)
+        record_remittance_event(db, transaction, "REMITTANCE_AVAILABLE", actor_user_id)
+        for assessment in assessments_by_transaction.get(transaction.id, []):
+            record_risk_event(db, assessment, actor_user_id)
+        if transaction.status == "COMPLETED":
+            record_remittance_event(db, transaction, "REMITTANCE_COMPLETED", actor_user_id)
+
+    db.flush()
+    after_count = db.query(BlockchainBlock).count()
+    return {
+        "transactions_scanned": len(transactions),
+        "risk_assessments_scanned": len(assessments),
+        "blocks_before": before_count,
+        "blocks_after": after_count,
+        "blocks_created": after_count - before_count,
+    }
+
+
 def blockchain_info(db: Session) -> dict[str, Any]:
     chain = local_blockchain_provider.get_chain(db)
     validation = local_blockchain_provider.validate_chain(db)
