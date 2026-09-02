@@ -2889,7 +2889,7 @@ function NewRemittanceView({
     beneficiary_id: '',
     origin_country: initialOrigin,
     destination_country: initialCorridor?.destination_country ?? 'Guatemala',
-    amount: '400.00',
+    amount: '',
     currency: initialCorridor?.origin_currency ?? 'USD',
     funding_source_id: '',
     payment_method: 'BANK_TRANSFER',
