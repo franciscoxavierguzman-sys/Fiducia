@@ -1038,7 +1038,7 @@ function ForgotPasswordPanel({ setAuthMode }: { setAuthMode: (mode: AuthMode) =>
   }
 
   return (
-    <div className="panel">
+    <div className="panel self-start">
       <div className="mb-6 flex items-center gap-3">
         <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-fiducia-teal text-white">
           <ShieldCheck size={20} />
@@ -1058,6 +1058,9 @@ function ForgotPasswordPanel({ setAuthMode }: { setAuthMode: (mode: AuthMode) =>
         Volver al login
       </button>
       {message ? <StatusMessage message={message} type={messageType} /> : null}
+      <p className="mt-6 border-t border-slate-100 pt-4 text-center text-xs leading-5 text-slate-400">
+        Acceso protegido para gestionar remesas, beneficiarios y trazabilidad.
+      </p>
     </div>
   );
 }
