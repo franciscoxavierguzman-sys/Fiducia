@@ -10,7 +10,7 @@ FIDUCIA usa variables de entorno con placeholders en `.env.example`. No se deben
 | `DATABASE_URL` | Conexion DB | SQLite local | Puede serlo |
 | `SECRET_KEY` | Firma JWT | Placeholder | Si |
 | `ACCESS_TOKEN_EXPIRE_MINUTES` | Expiracion JWT | `60` | No |
-| `BACKEND_CORS_ORIGINS` | Origenes frontend permitidos | localhost | No |
+| `CORS_ORIGINS` | Origenes frontend permitidos | localhost/127.0.0.1 para Vite local | No |
 | `COMMISSION_RATE` | Comision base | `0.0225` | No |
 | `DEFAULT_EXCHANGE_RATE_USD_GTQ` | Fallback FX | `7.80` | No |
 | `MINIMUM_REMITTANCE_AMOUNT` | Monto minimo | `10` | No |
@@ -22,7 +22,12 @@ FIDUCIA usa variables de entorno con placeholders en `.env.example`. No se deben
 
 ## CORS
 
-El desarrollo local permite `localhost` y `127.0.0.1` en puertos Vite usados por el prototipo. No se usa comodin global con credenciales.
+El desarrollo local permite explicitamente:
+
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+Tambien se conservan `5174` para el caso en que Vite elija puerto alterno. No se usa comodin global con credenciales. `BACKEND_CORS_ORIGINS` se acepta como nombre legacy, pero `CORS_ORIGINS` es la variable recomendada.
 
 ## Puertos
 

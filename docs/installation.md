@@ -28,6 +28,13 @@ npm run dev
 
 Copiar `.env.example` a `.env` para uso local y cambiar `SECRET_KEY`. No subir `.env` a Git.
 
+Para desarrollo local, `CORS_ORIGINS` debe incluir:
+
+- `http://localhost:5173`
+- `http://127.0.0.1:5173`
+
+Despues de cambiar `.env`, reiniciar el backend para que FastAPI recargue la configuracion.
+
 ## Validacion
 
 ```powershell
