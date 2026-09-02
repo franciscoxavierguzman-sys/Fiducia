@@ -17,6 +17,7 @@ import {
   UserCircle,
   Users,
 } from 'lucide-react';
+import fiduciaLogo from './assets/fiducia-logo.png';
 import './styles.css';
 
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000/api/v1';
@@ -891,10 +892,11 @@ function Header({ currentUser, onLogout }: { currentUser: User | null; onLogout:
   return (
     <section className="border-b border-slate-200 bg-white">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
-        <div>
-          <p className="text-xl font-bold tracking-normal text-fiducia-navy">FIDUCIA</p>
-          <p className="text-sm text-slate-500">Plataforma de remesas inteligentes</p>
-        </div>
+        <img
+          src={fiduciaLogo}
+          alt="FIDUCIA - Plataforma de remesas inteligentes"
+          className="h-12 w-auto max-w-[220px] object-contain sm:h-14 sm:max-w-[280px]"
+        />
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-fiducia-mint px-4 py-2 text-sm font-medium text-fiducia-teal">
             IA + Analítica
