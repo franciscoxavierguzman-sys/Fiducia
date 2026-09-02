@@ -929,6 +929,11 @@ function LandingLogin(props: {
   return (
     <section className="mx-auto grid max-w-6xl gap-8 px-6 py-12 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="flex flex-col justify-center">
+        <img
+          src={fiduciaLogo}
+          alt="FIDUCIA - Plataforma de remesas inteligentes"
+          className="mb-8 w-full max-w-xl object-contain"
+        />
         <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-fiducia-teal">
           Remesas digitales con analitica e IA
         </p>
