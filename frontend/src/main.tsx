@@ -891,11 +891,11 @@ function App() {
 function Header({ currentUser, onLogout }: { currentUser: User | null; onLogout: () => void }) {
   return (
     <section className="border-b border-slate-200 bg-white">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-5">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
         <img
           src={fiduciaLogo}
           alt="FIDUCIA - Plataforma de remesas inteligentes"
-          className="h-12 w-auto max-w-[220px] object-contain sm:h-14 sm:max-w-[280px]"
+          className="h-8 w-auto max-w-[160px] object-contain sm:h-10 sm:max-w-[200px]"
         />
         <div className="flex items-center gap-3">
           <span className="rounded-full bg-fiducia-mint px-4 py-2 text-sm font-medium text-fiducia-teal">
@@ -927,23 +927,23 @@ function LandingLogin(props: {
   onLogin: (event: React.FormEvent<HTMLFormElement>) => void;
 }) {
   return (
-    <section className="mx-auto grid max-w-6xl items-start gap-8 px-6 py-12 lg:grid-cols-[1.2fr_0.8fr]">
+    <section className="mx-auto grid max-w-6xl items-start gap-6 px-6 py-6 lg:grid-cols-[1.2fr_0.8fr]">
       <div className="flex flex-col justify-center">
         <img
           src={fiduciaLogo}
           alt="FIDUCIA - Plataforma de remesas inteligentes"
-          className="mb-8 w-full max-w-xl object-contain"
+          className="mb-5 max-h-52 w-full max-w-lg object-contain"
         />
-        <p className="mb-3 text-sm font-semibold uppercase tracking-widest text-fiducia-teal">
+        <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-fiducia-teal">
           Remesas digitales con analitica e IA
         </p>
-        <h1 className="max-w-3xl text-4xl font-bold leading-tight text-fiducia-navy md:text-5xl">
+        <h1 className="max-w-3xl text-4xl font-bold leading-tight text-fiducia-navy">
           Envia mas. Paga menos. Decide mejor.
         </h1>
-        <p className="mt-5 max-w-2xl text-lg leading-8 text-slate-600">
+        <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
           Plataforma para gestionar beneficiarios, cotizar envios, crear remesas y consultar historial.
         </p>
-        <div className="mt-8 grid gap-4 sm:grid-cols-3">
+        <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <Feature icon={<ShieldCheck />} title="Seguridad base" text="JWT, roles y contrasenas hasheadas." />
           <Feature icon={<Users />} title="Beneficiarios" text="Registro propio y administracion segura." />
           <Feature icon={<BarChart3 />} title="Remesas" text="Cotizacion y trazabilidad." />
@@ -3885,7 +3885,7 @@ function TermsModal({ onClose }: { onClose: () => void }) {
 
 function DemoFooter() {
   return (
-    <footer className="mx-auto max-w-7xl px-6 pb-6 text-center text-xs leading-5 text-slate-400">
+    <footer className="mx-auto max-w-7xl px-6 pb-3 text-center text-xs leading-5 text-slate-400">
       FIDUCIA es un prototipo tecnologico desarrollado con fines educativos y de investigacion. No constituye una entidad financiera ni un servicio real de remesas.
     </footer>
   );
@@ -4004,10 +4004,10 @@ function validateRegisterForm(form: RegisterFormState) {
 
 function Feature({ icon, title, text }: { icon: React.ReactNode; title: string; text: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <div className="mb-3 text-fiducia-teal">{icon}</div>
+    <div className="rounded-lg border border-slate-200 bg-white p-3 shadow-sm">
+      <div className="mb-2 text-fiducia-teal">{icon}</div>
       <h3 className="font-semibold text-fiducia-navy">{title}</h3>
-      <p className="mt-1 text-sm leading-6 text-slate-600">{text}</p>
+      <p className="mt-1 text-sm leading-5 text-slate-600">{text}</p>
     </div>
   );
 }
