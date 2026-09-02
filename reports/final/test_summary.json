@@ -8,7 +8,7 @@
   },
   "phase10_targeted": {
     "command": ".\\.venv\\Scripts\\python.exe -m pytest tests\\test_phase10_final_hardening.py -q",
-    "passed": 5,
+    "passed": 7,
     "failed": 0
   },
   "frontend_initial_build": {
@@ -36,14 +36,14 @@
   },
   "final_backend": {
     "command": ".\\.venv\\Scripts\\python.exe -m pytest",
-    "passed": 87,
+    "passed": 89,
     "failed": 0,
-    "duration": "77.10s"
+    "duration": "52.40s"
   },
   "final_frontend_build": {
     "command": "npm run build",
     "status": "PASS",
     "modules_transformed": 1665,
-    "duration": "6.61s"
+    "duration": "2.47s"
   }
 }

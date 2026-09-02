@@ -79,6 +79,41 @@ def test_health_ready_request_id_and_security_headers(client):
     assert ready.json()["status"] == "ready"
 
 
+def test_cors_allows_localhost_and_127_development_origins(client):
+    for origin in ("http://localhost:5173", "http://127.0.0.1:5173"):
+        response = client.options(
+            "/api/v1/blockchain/info",
+            headers={
+                "Origin": origin,
+                "Access-Control-Request-Method": "GET",
+                "Access-Control-Request-Headers": "authorization",
+            },
+        )
+        assert response.status_code == 200
+        assert response.headers["Access-Control-Allow-Origin"] == origin
+
+        unauthorized_response = client.get("/api/v1/blockchain/info", headers={"Origin": origin})
+        assert unauthorized_response.status_code == 401
+        assert unauthorized_response.headers["Access-Control-Allow-Origin"] == origin
+
+
+def test_cors_does_not_authorize_unknown_origin(client):
+    response = client.options(
+        "/api/v1/blockchain/info",
+        headers={
+            "Origin": "http://evil.example",
+            "Access-Control-Request-Method": "GET",
+            "Access-Control-Request-Headers": "authorization",
+        },
+    )
+    assert response.status_code == 400
+    assert "Access-Control-Allow-Origin" not in response.headers
+
+    unauthorized_response = client.get("/api/v1/blockchain/info", headers={"Origin": "http://evil.example"})
+    assert unauthorized_response.status_code == 401
+    assert "Access-Control-Allow-Origin" not in unauthorized_response.headers
+
+
 def test_system_info_and_metrics_are_admin_only(client):
     _, client_headers = register_and_login(client, "phase10-client@example.com")
     _, admin_headers = register_and_login(client, "phase10-admin@example.com", role="ADMIN")

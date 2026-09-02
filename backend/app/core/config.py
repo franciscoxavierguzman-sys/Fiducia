@@ -1,7 +1,8 @@
 from functools import lru_cache
+import json
 from pathlib import Path
 
-from pydantic import AnyHttpUrl, Field
+from pydantic import AliasChoices, AnyHttpUrl, Field
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
@@ -15,8 +16,9 @@ class Settings(BaseSettings):
     database_url: str = f"sqlite:///{(PROJECT_ROOT / 'database' / 'fiducia.db').as_posix()}"
     secret_key: str = "change-this-development-secret"
     access_token_expire_minutes: int = 60
-    backend_cors_origins: str = (
-        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174"
+    cors_origins_value: str = Field(
+        default="http://localhost:5173,http://127.0.0.1:5173,http://localhost:5174,http://127.0.0.1:5174",
+        validation_alias=AliasChoices("CORS_ORIGINS", "BACKEND_CORS_ORIGINS"),
     )
     commission_rate: float = Field(default=0.0225, ge=0)
     default_exchange_rate_usd_gtq: float = Field(default=7.80, gt=0)
@@ -35,7 +37,11 @@ class Settings(BaseSettings):
 
     @property
     def cors_origins(self) -> list[str | AnyHttpUrl]:
-        return [origin.strip() for origin in self.backend_cors_origins.split(",") if origin.strip()]
+        raw_value = self.cors_origins_value.strip()
+        if raw_value.startswith("["):
+            parsed = json.loads(raw_value)
+            return [str(origin).strip() for origin in parsed if str(origin).strip()]
+        return [origin.strip() for origin in raw_value.split(",") if origin.strip()]
 
 
 @lru_cache
