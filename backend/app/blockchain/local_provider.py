@@ -246,13 +246,13 @@ def rebuild_evidence_hash(db: Session, block: BlockchainBlock) -> str | None:
 
     if block.schema_version == GENESIS_SCHEMA_VERSION:
         return block.evidence_hash
-    if block.schema_version.endswith("remittance-evidence-v1"):
+    if "remittance-evidence-v" in block.schema_version:
         transaction = db.get(Transaction, int(block.entity_reference))
         if transaction is None:
             return None
         occurred_at = transaction.updated_at if block.event_type == "REMITTANCE_COMPLETED" else transaction.created_at
         status_override = "COMPLETED" if block.event_type == "REMITTANCE_COMPLETED" else "AVAILABLE"
-        return hash_payload(remittance_evidence(transaction, block.event_type, occurred_at, status_override))
+        return hash_payload(remittance_evidence(transaction, block.event_type, occurred_at, status_override, schema_version=block.schema_version))
     if block.schema_version.endswith("risk-evidence-v1"):
         assessments = list(
             db.scalars(

@@ -497,6 +497,34 @@ type BlockchainVerification = {
   verified: number;
   mismatches: Array<{ block_index: number; expected_hash?: string; recorded_hash?: string }>;
 };
+type BlockchainIntegrityResult = {
+  transaction_id: string;
+  remittance_number: string | null;
+  status: string;
+  stored_hash: string | null;
+  calculated_hash: string | null;
+  verified_at: string;
+  blockchain_reference: string | null;
+  details: string | null;
+  differences: Array<Record<string, unknown>>;
+  blocks_checked: number;
+  verified_blocks?: number | null;
+  mismatches: Array<Record<string, unknown>>;
+};
+type BlockchainIntegritySummary = {
+  status: string;
+  verified_at: string;
+  total_transactions: number;
+  verified: number;
+  integrity_mismatches: number;
+  blockchain_record_missing: number;
+  database_record_missing: number;
+  legacy_not_protected: number;
+  chain_broken: number;
+  verification_errors: number;
+  chain_validation: BlockchainValidation;
+  results: BlockchainIntegrityResult[];
+};
 type BlockchainOverview = {
   info: BlockchainInfo;
   metrics: BlockchainMetrics;
@@ -2147,12 +2175,14 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
   const [metrics, setMetrics] = React.useState<BlockchainMetrics | null>(null);
   const [blocks, setBlocks] = React.useState<BlockchainBlock[]>([]);
   const [validation, setValidation] = React.useState<BlockchainValidation | null>(null);
+  const [integritySummary, setIntegritySummary] = React.useState<BlockchainIntegritySummary | null>(null);
   const [selectedBlock, setSelectedBlock] = React.useState<BlockchainBlock | null>(null);
   const [remittanceId, setRemittanceId] = React.useState(transactions[0]?.id.toString() ?? '');
   const [history, setHistory] = React.useState<BlockchainBlock[]>([]);
-  const [verification, setVerification] = React.useState<BlockchainVerification | null>(null);
+  const [verification, setVerification] = React.useState<BlockchainIntegrityResult | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isVerifying, setIsVerifying] = React.useState(false);
+  const [isVerifyingAll, setIsVerifyingAll] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
   const isAdmin = user.role.name === 'ADMIN';
 
@@ -2168,6 +2198,12 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
         setMetrics(overview.metrics);
         setBlocks(overview.blocks);
         setSelectedBlock(overview.blocks[overview.blocks.length - 1] ?? null);
+        try {
+          const integrityData = await request<BlockchainIntegritySummary>('/blockchain/integrity/status');
+          if (isMounted) setIntegritySummary(integrityData);
+        } catch {
+          // Keep traceability available even when the integrity summary is restricted or temporarily unavailable.
+        }
         if (isAdmin) {
           try {
             const validationData = await request<BlockchainValidation>('/blockchain/validate');
@@ -2197,7 +2233,7 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
     setError(null);
     try {
       const [verificationData, historyData] = await Promise.all([
-        request<BlockchainVerification>(`/blockchain/verify/${id}`),
+        request<BlockchainIntegrityResult>(`/blockchain/integrity/transactions/${id}`),
         request<BlockchainBlock[]>(`/blockchain/transactions/${id}/history`),
       ]);
       setVerification(verificationData);
@@ -2208,6 +2244,21 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
       setError('No se encontro trazabilidad para esa remesa o tu perfil no tiene acceso.');
     } finally {
       setIsVerifying(false);
+    }
+  }
+
+  async function verifyAllIntegrity() {
+    const confirmed = window.confirm('La verificacion completa puede revisar muchas remesas. Deseas continuar?');
+    if (!confirmed) return;
+    setIsVerifyingAll(true);
+    setError(null);
+    try {
+      const result = await request<BlockchainIntegritySummary>('/blockchain/integrity/verify', { method: 'POST' });
+      setIntegritySummary(result);
+    } catch (verificationError) {
+      setError(`No se pudo completar la verificacion de integridad. Detalle: ${describeRequestFailure(verificationError)}`);
+    } finally {
+      setIsVerifyingAll(false);
     }
   }
 
@@ -2240,6 +2291,31 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
           <Metric label="Ultimo bloque" value={`#${Math.max(0, (info?.total_blocks ?? 1) - 1)}`} />
         </div>
         <p className="mt-4 break-all text-xs leading-6 text-slate-500">Ultimo hash: {info?.last_block_hash ?? 'N/D'}</p>
+      </section>
+
+      <section className="panel">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h2 className="section-title">Integridad Blockchain</h2>
+            <p className="text-sm text-slate-500">Comparacion entre el estado actual de BD y la evidencia criptografica registrada.</p>
+          </div>
+          <button className="primary-button inline-flex items-center justify-center gap-2" type="button" onClick={verifyAllIntegrity} disabled={isVerifyingAll}>
+            <ShieldCheck size={17} />
+            {isVerifyingAll ? 'Verificando...' : 'Verificar integridad'}
+          </button>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-4 xl:grid-cols-7">
+          <Metric label="Estado general" value={integritySummary ? integrityStatusLabel(integritySummary.status) : 'N/D'} />
+          <Metric label="Transacciones" value={(integritySummary?.total_transactions ?? 0).toString()} />
+          <Metric label="Integras" value={(integritySummary?.verified ?? 0).toString()} />
+          <Metric label="Inconsistencias" value={(integritySummary?.integrity_mismatches ?? 0).toString()} />
+          <Metric label="Sin evidencia" value={(integritySummary?.blockchain_record_missing ?? 0).toString()} />
+          <Metric label="Legacy" value={(integritySummary?.legacy_not_protected ?? 0).toString()} />
+          <Metric label="Errores" value={(integritySummary?.verification_errors ?? 0).toString()} />
+        </div>
+        <p className="mt-4 text-xs text-slate-500">
+          Ultima verificacion: {integritySummary ? formatDate(integritySummary.verified_at) : 'Aun no disponible'}
+        </p>
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1.4fr_1fr]">
@@ -2306,9 +2382,20 @@ function BlockchainView({ user, transactions }: { user: User; transactions: Tran
           </div>
           {verification ? (
             <div className="mt-5 grid gap-3 md:grid-cols-3">
-              <Metric label="Estado" value={verification.status} />
-              <Metric label="Evidencias validas" value={verification.verified.toString()} />
+              <Metric label="Estado" value={integrityStatusLabel(verification.status)} />
+              <Metric label="Bloques revisados" value={verification.blocks_checked.toString()} />
               <Metric label="Alertas" value={verification.mismatches.length.toString()} />
+            </div>
+          ) : null}
+          {verification?.stored_hash ? (
+            <div className="mt-5 grid gap-3">
+              <p className="break-all rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-600">
+                Hash registrado: {verification.stored_hash}
+              </p>
+              <p className="break-all rounded-md border border-slate-200 bg-slate-50 p-3 font-mono text-xs text-slate-600">
+                Hash calculado: {verification.calculated_hash ?? 'N/D'}
+              </p>
+              {verification.details ? <p className="text-sm leading-6 text-slate-600">{verification.details}</p> : null}
             </div>
           ) : null}
           {history.length > 0 ? (
@@ -4054,6 +4141,20 @@ function blockchainEventLabel(eventType: string) {
     REMITTANCE_COMPLETED: 'Remesa completada',
   };
   return labels[eventType] ?? eventType;
+}
+
+function integrityStatusLabel(status: string) {
+  const labels: Record<string, string> = {
+    VERIFIED: 'Integridad verificada',
+    REVIEW_REQUIRED: 'Revision requerida',
+    INTEGRITY_MISMATCH: 'Inconsistencia detectada',
+    BLOCKCHAIN_RECORD_MISSING: 'Evidencia no encontrada',
+    DATABASE_RECORD_MISSING: 'Registro BD no encontrado',
+    LEGACY_NOT_PROTECTED: 'Legacy sin evidencia',
+    CHAIN_BROKEN: 'Cadena comprometida',
+    VERIFICATION_ERROR: 'No fue posible verificar',
+  };
+  return labels[status] ?? status;
 }
 
 function assistantSuggestions(role: string) {

@@ -56,3 +56,33 @@ class BlockchainOverview(BaseModel):
     info: BlockchainInfo
     metrics: BlockchainMetrics
     blocks: list[BlockchainBlockRead]
+
+
+class BlockchainIntegrityResult(BaseModel):
+    transaction_id: str
+    remittance_number: str | None = None
+    status: str
+    stored_hash: str | None = None
+    calculated_hash: str | None = None
+    verified_at: str
+    blockchain_reference: str | None = None
+    details: str | None = None
+    differences: list[dict] = []
+    blocks_checked: int = 0
+    verified_blocks: int | None = None
+    mismatches: list[dict] = []
+
+
+class BlockchainIntegritySummary(BaseModel):
+    status: str
+    verified_at: str
+    total_transactions: int
+    verified: int
+    integrity_mismatches: int
+    blockchain_record_missing: int
+    database_record_missing: int
+    legacy_not_protected: int
+    chain_broken: int
+    verification_errors: int
+    chain_validation: ChainValidationResult
+    results: list[BlockchainIntegrityResult] = []

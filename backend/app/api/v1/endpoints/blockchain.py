@@ -6,7 +6,17 @@ from sqlalchemy.orm import Session
 from app.api.dependencies import get_current_user
 from app.db.session import get_db
 from app.models.user import User
-from app.schemas.blockchain import BlockchainBlockRead, BlockchainInfo, BlockchainMetrics, BlockchainOverview, ChainValidationResult, EvidenceVerificationResult
+from app.blockchain.integrity import latest_integrity_status, verify_blockchain_integrity, verify_transaction_integrity
+from app.schemas.blockchain import (
+    BlockchainBlockRead,
+    BlockchainInfo,
+    BlockchainIntegrityResult,
+    BlockchainIntegritySummary,
+    BlockchainMetrics,
+    BlockchainOverview,
+    ChainValidationResult,
+    EvidenceVerificationResult,
+)
 from app.services.blockchain import (
     blockchain_info,
     blockchain_metrics,
@@ -91,3 +101,25 @@ def verify_transaction(remittance_id: int, current_user: User = Depends(get_curr
 @router.get("/validate", response_model=ChainValidationResult)
 def validate_chain(_: User = Depends(require_admin), db: Session = Depends(get_db)) -> dict:
     return validate_blockchain(db)
+
+
+@router.get("/integrity/transactions/{remittance_id}", response_model=BlockchainIntegrityResult)
+def verify_remittance_integrity(remittance_id: int, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)) -> dict:
+    if current_user.role.name == "CLIENT":
+        from app.repositories.transactions import get_transaction
+
+        if get_transaction(db, remittance_id, current_user.id) is None:
+            raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail={"code": "TRANSACTION_NOT_FOUND", "message": "Remesa no encontrada"})
+    elif current_user.role.name not in {"ADMIN", "RISK_ANALYST"}:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail={"code": "BLOCKCHAIN_FORBIDDEN", "message": "Acceso blockchain no autorizado"})
+    return verify_transaction_integrity(db, remittance_id, actor_user_id=current_user.id, verification_source="API")
+
+
+@router.post("/integrity/verify", response_model=BlockchainIntegritySummary)
+def run_integrity_verification(current_user: User = Depends(require_blockchain_audit_access), db: Session = Depends(get_db)) -> dict:
+    return verify_blockchain_integrity(db, actor_user_id=current_user.id, verification_source="API")
+
+
+@router.get("/integrity/status", response_model=BlockchainIntegritySummary)
+def read_integrity_status(_: User = Depends(require_blockchain_audit_access), db: Session = Depends(get_db)) -> dict:
+    return latest_integrity_status(db)

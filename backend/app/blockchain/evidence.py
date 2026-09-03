@@ -2,14 +2,20 @@ from __future__ import annotations
 
 from datetime import datetime
 
-from app.blockchain.config import REMITTANCE_EVIDENCE_SCHEMA, RISK_EVIDENCE_SCHEMA
+from app.blockchain.config import LEGACY_REMITTANCE_EVIDENCE_SCHEMA, REMITTANCE_EVIDENCE_SCHEMA, RISK_EVIDENCE_SCHEMA
 from app.models.risk_assessment import RiskAssessment
 from app.models.transaction import Transaction
 
 
-def remittance_evidence(transaction: Transaction, event_type: str, occurred_at: datetime | None = None, status_override: str | None = None) -> dict:
-    return {
-        "schema_version": REMITTANCE_EVIDENCE_SCHEMA,
+def remittance_evidence(
+    transaction: Transaction,
+    event_type: str,
+    occurred_at: datetime | None = None,
+    status_override: str | None = None,
+    schema_version: str = REMITTANCE_EVIDENCE_SCHEMA,
+) -> dict:
+    evidence = {
+        "schema_version": schema_version,
         "event_type": event_type,
         "entity_type": "remittance",
         "entity_reference": str(transaction.id),
@@ -23,6 +29,23 @@ def remittance_evidence(transaction: Transaction, event_type: str, occurred_at: 
         "status": status_override or transaction.status,
         "occurred_at": occurred_at or transaction.updated_at or transaction.created_at,
     }
+    if schema_version != LEGACY_REMITTANCE_EVIDENCE_SCHEMA:
+        evidence.update(
+            {
+                "sender_id": transaction.sender_id,
+                "beneficiary_id": transaction.beneficiary_id,
+                "beneficiary_user_id": transaction.beneficiary_user_id,
+                "funding_source_id": transaction.funding_source_id,
+                "exchange_rate": transaction.exchange_rate,
+                "total_amount": transaction.total_amount,
+                "debit_amount": transaction.debit_amount,
+                "debit_currency": transaction.debit_currency,
+                "destination_amount": transaction.destination_amount,
+                "payment_method": transaction.payment_method,
+                "delivery_method": transaction.delivery_method,
+            }
+        )
+    return evidence
 
 
 def risk_evidence(assessment: RiskAssessment) -> dict:

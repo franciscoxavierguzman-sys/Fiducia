@@ -311,3 +311,138 @@ def test_blockchain_failure_does_not_break_remittance_flow(client, monkeypatch):
         assert assessment.risk_engine_version == "risk-engine-v1.1"
         assert len(failed_events) >= 2
         assert db.query(BlockchainBlock).count() == 0
+
+
+def test_integrity_verification_reports_verified_transaction(client):
+    _, headers = register_and_login(client, "integrity-ok@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-ok-beneficiary@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{transaction['id']}", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "VERIFIED"
+    assert body["stored_hash"] == body["calculated_hash"]
+    assert body["blocks_checked"] >= 2
+
+
+def test_integrity_verification_detects_amount_tampering(client):
+    _, headers = register_and_login(client, "integrity-amount@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-amount-beneficiary@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    with SessionLocal() as db:
+        saved = db.get(Transaction, transaction["id"])
+        saved.source_amount = Decimal("5000.00")
+        db.commit()
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{transaction['id']}", headers=headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["status"] == "INTEGRITY_MISMATCH"
+    assert body["stored_hash"] != body["calculated_hash"]
+
+
+def test_integrity_verification_detects_beneficiary_tampering(client):
+    _, headers = register_and_login(client, "integrity-beneficiary@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-beneficiary-a@example.com")
+    other_beneficiary = create_beneficiary(client, headers, email="integrity-beneficiary-b@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    with SessionLocal() as db:
+        saved = db.get(Transaction, transaction["id"])
+        saved.beneficiary_id = other_beneficiary["id"]
+        db.commit()
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{transaction['id']}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "INTEGRITY_MISMATCH"
+
+
+def test_integrity_verification_detects_commission_tampering(client):
+    _, headers = register_and_login(client, "integrity-commission@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-commission-beneficiary@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    with SessionLocal() as db:
+        saved = db.get(Transaction, transaction["id"])
+        saved.commission_amount = Decimal("99.99")
+        db.commit()
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{transaction['id']}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "INTEGRITY_MISMATCH"
+
+
+def test_integrity_verification_detects_missing_blockchain_record(client, monkeypatch):
+    from app.api.v1.endpoints import transactions as transactions_endpoint
+
+    _, headers = register_and_login(client, "integrity-missing@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-missing-beneficiary@example.com")
+    create_remittance(client, headers, beneficiary["id"])
+
+    def skip_remittance_evidence(db, transaction, event_type, actor_user_id=None):
+        return None
+
+    monkeypatch.setattr(transactions_endpoint, "record_remittance_event", skip_remittance_evidence)
+    missing = create_remittance(client, headers, beneficiary["id"])
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{missing['id']}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "BLOCKCHAIN_RECORD_MISSING"
+
+
+def test_integrity_verification_reports_provider_error_as_technical_error(client, monkeypatch):
+    from app.blockchain import integrity as integrity_module
+
+    def fail_validate_chain(db):
+        raise RuntimeError("temporary provider outage")
+
+    monkeypatch.setattr(integrity_module.local_blockchain_provider, "validate_chain", fail_validate_chain)
+    _, headers = register_and_login(client, "integrity-error@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-error-beneficiary@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{transaction['id']}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "VERIFICATION_ERROR"
+
+
+def test_integrity_verification_detects_chain_broken(client):
+    _, headers = register_and_login(client, "integrity-chain@example.com")
+    beneficiary = create_beneficiary(client, headers, email="integrity-chain-beneficiary@example.com")
+    transaction = create_remittance(client, headers, beneficiary["id"])
+
+    with SessionLocal() as db:
+        block = db.query(BlockchainBlock).filter(BlockchainBlock.block_index == 2).one()
+        block.previous_hash = "f" * 64
+        db.commit()
+
+    response = client.get(f"/api/v1/blockchain/integrity/transactions/{transaction['id']}", headers=headers)
+
+    assert response.status_code == 200
+    assert response.json()["status"] == "CHAIN_BROKEN"
+
+
+def test_integrity_verification_detects_database_record_missing(client):
+    _, admin_headers = register_and_login(client, "integrity-db-missing-admin@example.com", role="ADMIN")
+    _, sender_headers = register_and_login(client, "integrity-db-missing@example.com")
+    beneficiary = create_beneficiary(client, sender_headers, email="integrity-db-missing-beneficiary@example.com")
+    transaction = create_remittance(client, sender_headers, beneficiary["id"])
+
+    with SessionLocal() as db:
+        db.query(Transaction).filter(Transaction.id == transaction["id"]).delete()
+        db.commit()
+
+    response = client.post("/api/v1/blockchain/integrity/verify", headers=admin_headers)
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["database_record_missing"] == 1
+    assert any(item["status"] == "DATABASE_RECORD_MISSING" for item in body["results"])

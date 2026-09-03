@@ -303,6 +303,9 @@ GET /api/v1/blockchain/blocks/{block_index}
 GET /api/v1/blockchain/transactions/{remittance_id}/history
 GET /api/v1/blockchain/verify/{remittance_id}
 GET /api/v1/blockchain/validate
+GET /api/v1/blockchain/integrity/transactions/{remittance_id}
+POST /api/v1/blockchain/integrity/verify
+GET /api/v1/blockchain/integrity/status
 ```
 
 Permisos:
@@ -314,6 +317,8 @@ Permisos:
 Los endpoints devuelven metadatos tecnicos, hashes SHA-256, enlaces entre bloques, nonce, dificultad y estado de validacion. `GET /api/v1/blockchain/overview` entrega en una sola respuesta `info`, `metrics` y `blocks` para consumo de la interfaz web. No devuelven PII, numeros completos de cuentas, tarjetas, documentos, CVV, contrasenas ni tokens.
 
 La validacion de evidencia reconstruye el hash canonico desde la remesa o evaluacion de riesgo operacional y lo compara contra el hash registrado en la cadena local. Si la capa blockchain falla durante una operacion, se registra auditoria y la remesa conserva su flujo transaccional normal.
+
+La verificacion de integridad compara el estado actual de la remesa en BD contra la evidencia criptografica registrada. Puede devolver `VERIFIED`, `INTEGRITY_MISMATCH`, `BLOCKCHAIN_RECORD_MISSING`, `DATABASE_RECORD_MISSING`, `LEGACY_NOT_PROTECTED`, `CHAIN_BROKEN` o `VERIFICATION_ERROR`. Esta dimension no modifica el Risk Engine ni bloquea automaticamente remesas.
 
 Eventos activos registrados por el flujo actual:
 
