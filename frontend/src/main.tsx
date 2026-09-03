@@ -932,7 +932,7 @@ function LandingLogin(props: {
         <img
           src={fiduciaLogo}
           alt="FIDUCIA - Plataforma de remesas inteligentes"
-          className="mb-5 max-h-52 w-full max-w-lg object-contain"
+          className="mb-5 max-h-64 w-full max-w-2xl object-contain"
         />
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-fiducia-teal">
           Remesas digitales con analitica e IA
