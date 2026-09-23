@@ -103,3 +103,10 @@ class UserRead(BaseModel):
     must_change_password: bool
     created_at: datetime
     role: RoleRead
+
+
+class UserPasswordResetResponse(BaseModel):
+    message: str
+    temporary_password: str
+    delivery: str
+    user: UserRead

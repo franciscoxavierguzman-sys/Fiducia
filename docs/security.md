@@ -4,7 +4,7 @@ FIDUCIA implementa controles proporcionales a un prototipo local integrado:
 
 - contrasenas hasheadas con bcrypt;
 - autenticacion con JWT;
-- roles base: `CLIENT`, `RISK_ANALYST`, `ADMIN`;
+- roles base: `CLIENT`, `SUPPORT`, `RISK_ANALYST`, `ADMIN`;
 - endpoints protegidos mediante bearer token;
 - validacion de entrada con Pydantic;
 - configuracion sensible mediante variables de entorno.
@@ -13,6 +13,8 @@ FIDUCIA implementa controles proporcionales a un prototipo local integrado:
 - rate limiting in-process para login y asistente;
 - auditoria de eventos relevantes.
 - CORS local con lista explicita de origins autorizados.
+
+El rol `SUPPORT` esta limitado a gestion de usuarios, reinicio de contrasenas y bloqueo/desbloqueo de cuentas. El frontend no expone dashboard, remesas, pagos, analitica, riesgo ni blockchain para este perfil.
 
 ## Limitaciones
 

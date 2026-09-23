@@ -7,12 +7,15 @@ import {
   Eye,
   History,
   Inbox,
+  KeyRound,
   LogIn,
   LogOut,
+  Lock,
   Plus,
   Search,
   Send,
   ShieldCheck,
+  Unlock,
   X,
   UserCircle,
   Users,
@@ -128,7 +131,9 @@ type User = {
   fictitious_document_id: string | null;
   birth_date: string | null;
   occupation: string | null;
+  is_active: boolean;
   must_change_password: boolean;
+  created_at: string;
   role: Role;
 };
 type FundingSource = {
@@ -579,6 +584,7 @@ type View =
   | 'risk-review'
   | 'blockchain'
   | 'forecasting'
+  | 'support-users'
   | 'password-change';
 type AuthMode = 'login' | 'register' | 'forgot';
 type MessageType = 'error' | 'success';
@@ -622,6 +628,7 @@ function App() {
   const [messageType, setMessageType] = React.useState<MessageType>('error');
   const [isLoading, setIsLoading] = React.useState(false);
   const [isCheckingSession, setIsCheckingSession] = React.useState(true);
+  const isSupport = currentUser?.role.name === 'SUPPORT';
   const canViewAnalytics = currentUser?.role.name === 'ADMIN' || currentUser?.role.name === 'RISK_ANALYST';
 
   React.useEffect(() => {
@@ -631,6 +638,13 @@ function App() {
       showMessage('Esta vista esta reservada para perfiles internos autorizados.', 'error');
     }
   }, [canViewAnalytics, currentUser, view]);
+
+  React.useEffect(() => {
+    const supportViews: View[] = ['support-users', 'profile', 'password-change'];
+    if (currentUser?.role.name === 'SUPPORT' && !supportViews.includes(view)) {
+      setView('support-users');
+    }
+  }, [currentUser, view]);
 
   React.useEffect(() => {
     const storedToken = window.localStorage.getItem(tokenStorageKey);
@@ -664,6 +678,11 @@ function App() {
       const user = await apiRequest<User>('/users/me', {}, authToken);
       setCurrentUser(user);
       if (user.must_change_password) setView('password-change');
+      if (user.role.name === 'SUPPORT') {
+        if (!user.must_change_password) setView('support-users');
+        clearClientData();
+        return true;
+      }
       await refreshClientData(authToken);
       return true;
     } catch {
@@ -713,7 +732,6 @@ function App() {
         setView('password-change');
         showMessage('Ingresa una nueva contrasena para completar la recuperacion.', 'success');
       } else {
-        setView('dashboard');
         showMessage('Sesion iniciada correctamente.', 'success');
       }
     } catch (error) {
@@ -733,14 +751,19 @@ function App() {
     setToken(null);
     setCurrentUser(null);
     setPassword('');
+    clearClientData();
+    setSelectedTransaction(null);
+    setView('dashboard');
+    showMessage('Sesion cerrada correctamente.', 'success');
+  }
+
+  function clearClientData() {
     setBeneficiaries([]);
     setTransactions([]);
     setReceivedTransactions([]);
     setFundingSources([]);
     setRelationships([]);
-    setSelectedTransaction(null);
-    setView('dashboard');
-    showMessage('Sesion cerrada correctamente.', 'success');
+    setCorridors([]);
   }
 
   function showMessage(text: string, type: MessageType) {
@@ -773,33 +796,42 @@ function App() {
         <section className="mx-auto max-w-7xl px-6 py-8">
           {!currentUser.must_change_password ? (
           <nav className="mb-6 flex flex-wrap gap-2">
-            <NavButton active={view === 'dashboard'} onClick={() => setView('dashboard')} label="Inicio" />
-            <NavButton active={view === 'assistant'} onClick={() => setView('assistant')} label="Asistente" />
-            <NavButton active={view === 'new-remittance'} onClick={() => setView('new-remittance')} label="Enviar remesa" />
-            <NavButton active={view === 'sent'} onClick={() => setView('sent')} label="Remesas enviadas" />
-            <NavButton active={view === 'received'} onClick={() => setView('received')} label="Remesas recibidas" />
-            <NavButton active={view === 'beneficiaries'} onClick={() => setView('beneficiaries')} label="Beneficiarios" />
-            <NavButton active={view === 'funding'} onClick={() => setView('funding')} label="Metodos de pago" />
-            <NavButton active={view === 'tracking'} onClick={() => setView('tracking')} label="Rastrear remesa" />
-            {canViewAnalytics ? (
-              <NavButton active={view === 'bi'} onClick={() => setView('bi')} label="Inteligencia de negocio" />
-            ) : null}
-            {canViewAnalytics ? (
-              <NavButton active={view === 'analytics'} onClick={() => setView('analytics')} label="Analitica" />
-            ) : null}
-            {canViewAnalytics ? (
-              <NavButton active={view === 'forecasting'} onClick={() => setView('forecasting')} label="Analitica predictiva" />
-            ) : null}
-            {canViewAnalytics ? (
-              <NavButton active={view === 'risk'} onClick={() => setView('risk')} label="Inteligencia de riesgo" />
-            ) : null}
-            {canViewAnalytics ? (
-              <NavButton active={view === 'risk-review'} onClick={() => setView('risk-review')} label="Revision de riesgo" />
-            ) : null}
-            {canViewAnalytics ? (
-              <NavButton active={view === 'blockchain'} onClick={() => setView('blockchain')} label="Trazabilidad blockchain" />
-            ) : null}
-            <NavButton active={view === 'profile'} onClick={() => setView('profile')} label="Mi perfil" />
+            {isSupport ? (
+              <>
+                <NavButton active={view === 'support-users'} onClick={() => setView('support-users')} label="Usuarios" />
+                <NavButton active={view === 'profile'} onClick={() => setView('profile')} label="Mi perfil" />
+              </>
+            ) : (
+              <>
+                <NavButton active={view === 'dashboard'} onClick={() => setView('dashboard')} label="Inicio" />
+                <NavButton active={view === 'assistant'} onClick={() => setView('assistant')} label="Asistente" />
+                <NavButton active={view === 'new-remittance'} onClick={() => setView('new-remittance')} label="Enviar remesa" />
+                <NavButton active={view === 'sent'} onClick={() => setView('sent')} label="Remesas enviadas" />
+                <NavButton active={view === 'received'} onClick={() => setView('received')} label="Remesas recibidas" />
+                <NavButton active={view === 'beneficiaries'} onClick={() => setView('beneficiaries')} label="Beneficiarios" />
+                <NavButton active={view === 'funding'} onClick={() => setView('funding')} label="Metodos de pago" />
+                <NavButton active={view === 'tracking'} onClick={() => setView('tracking')} label="Rastrear remesa" />
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'bi'} onClick={() => setView('bi')} label="Inteligencia de negocio" />
+                ) : null}
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'analytics'} onClick={() => setView('analytics')} label="Analitica" />
+                ) : null}
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'forecasting'} onClick={() => setView('forecasting')} label="Analitica predictiva" />
+                ) : null}
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'risk'} onClick={() => setView('risk')} label="Inteligencia de riesgo" />
+                ) : null}
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'risk-review'} onClick={() => setView('risk-review')} label="Revision de riesgo" />
+                ) : null}
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'blockchain'} onClick={() => setView('blockchain')} label="Trazabilidad blockchain" />
+                ) : null}
+                <NavButton active={view === 'profile'} onClick={() => setView('profile')} label="Mi perfil" />
+              </>
+            )}
           </nav>
           ) : null}
           {message ? <StatusMessage message={message} type={messageType} /> : null}
@@ -808,13 +840,16 @@ function App() {
               onChanged={(user) => {
                 setCurrentUser(user);
                 setPassword('');
-                setView('dashboard');
+                setView(user.role.name === 'SUPPORT' ? 'support-users' : 'dashboard');
                 showMessage('Contrasena actualizada correctamente.', 'success');
               }}
               showMessage={showMessage}
             />
           ) : null}
-          {!currentUser.must_change_password && view === 'dashboard' ? (
+          {!currentUser.must_change_password && view === 'support-users' && isSupport ? (
+            <SupportUsersView showMessage={showMessage} />
+          ) : null}
+          {!currentUser.must_change_password && view === 'dashboard' && !isSupport ? (
             <Dashboard
               user={currentUser}
               beneficiaries={beneficiaries}
@@ -3665,6 +3700,181 @@ function TrackingView({ showMessage }: { showMessage: (message: string, type: Me
   );
 }
 
+function SupportUsersView({ showMessage }: { showMessage: (message: string, type: MessageType) => void }) {
+  const [users, setUsers] = React.useState<User[]>([]);
+  const [query, setQuery] = React.useState('');
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [busyUserId, setBusyUserId] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    loadUsers();
+  }, []);
+
+  async function loadUsers() {
+    setIsLoading(true);
+    try {
+      const data = await request<User[]>('/users');
+      setUsers(data);
+    } catch {
+      showMessage('No se pudo cargar el listado de usuarios.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function resetPassword(user: User) {
+    setBusyUserId(user.id);
+    try {
+      const response = await request<{ temporary_password: string; user: User }>(`/users/${user.id}/password-reset`, {
+        method: 'POST',
+      });
+      setUsers((current) => current.map((item) => (item.id === user.id ? response.user : item)));
+      showMessage(`Contrasena temporal para ${user.email}: ${response.temporary_password}`, 'success');
+    } catch {
+      showMessage('No se pudo reiniciar la contrasena del usuario.', 'error');
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  async function setUserLock(user: User, shouldLock: boolean) {
+    setBusyUserId(user.id);
+    try {
+      const updated = await request<User>(`/users/${user.id}/${shouldLock ? 'lock' : 'unlock'}`, { method: 'POST' });
+      setUsers((current) => current.map((item) => (item.id === user.id ? updated : item)));
+      showMessage(shouldLock ? 'Usuario bloqueado correctamente.' : 'Usuario desbloqueado correctamente.', 'success');
+    } catch {
+      showMessage(shouldLock ? 'No se pudo bloquear el usuario.' : 'No se pudo desbloquear el usuario.', 'error');
+    } finally {
+      setBusyUserId(null);
+    }
+  }
+
+  const normalizedQuery = query.trim().toLowerCase();
+  const filteredUsers = normalizedQuery
+    ? users.filter((user) =>
+        `${user.first_name} ${user.last_name} ${user.email} ${user.role.name}`.toLowerCase().includes(normalizedQuery),
+      )
+    : users;
+
+  return (
+    <section className="panel">
+      <div className="flex flex-wrap items-start justify-between gap-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-widest text-fiducia-teal">Mesa de soporte</p>
+          <h2 className="section-title mt-1">Administracion de usuarios</h2>
+          <p className="mt-2 max-w-2xl text-sm text-slate-500">
+            Gestiona acceso, contrasenas temporales y desbloqueos sin exponer funciones de remesas o pagos.
+          </p>
+        </div>
+        <button className="secondary-button inline-flex items-center gap-2" type="button" onClick={loadUsers} disabled={isLoading}>
+          <Search size={16} />
+          Actualizar
+        </button>
+      </div>
+
+      <div className="mt-6">
+        <TextInput label="Buscar usuario" value={query} onChange={setQuery} placeholder="Nombre, correo o rol" required={false} />
+      </div>
+
+      <div className="mt-6 overflow-x-auto">
+        <table className="w-full min-w-[900px] border-separate border-spacing-y-2 text-left text-sm">
+          <thead className="text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th className="px-3 py-2">Usuario</th>
+              <th className="px-3 py-2">Rol</th>
+              <th className="px-3 py-2">Estado</th>
+              <th className="px-3 py-2">Cambio requerido</th>
+              <th className="px-3 py-2">Creado</th>
+              <th className="px-3 py-2 text-right">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {isLoading ? (
+              <tr>
+                <td className="rounded-lg border border-slate-200 bg-white px-3 py-4 text-slate-500" colSpan={6}>
+                  Cargando usuarios...
+                </td>
+              </tr>
+            ) : null}
+            {!isLoading && filteredUsers.length === 0 ? (
+              <tr>
+                <td className="rounded-lg border border-slate-200 bg-white px-3 py-4 text-slate-500" colSpan={6}>
+                  No se encontraron usuarios.
+                </td>
+              </tr>
+            ) : null}
+            {filteredUsers.map((user) => (
+              <tr className="bg-white shadow-sm" key={user.id}>
+                <td className="rounded-l-lg border-y border-l border-slate-200 px-3 py-3">
+                  <p className="font-semibold text-fiducia-navy">
+                    {user.first_name} {user.last_name}
+                  </p>
+                  <p className="text-xs text-slate-500">{user.email}</p>
+                </td>
+                <td className="border-y border-slate-200 px-3 py-3">
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-700">
+                    {supportRoleLabel(user.role.name)}
+                  </span>
+                </td>
+                <td className="border-y border-slate-200 px-3 py-3">
+                  <span
+                    className={
+                      user.is_active
+                        ? 'rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700'
+                        : 'rounded-full bg-red-50 px-3 py-1 text-xs font-semibold text-red-700'
+                    }
+                  >
+                    {user.is_active ? 'Activo' : 'Bloqueado'}
+                  </span>
+                </td>
+                <td className="border-y border-slate-200 px-3 py-3 text-slate-600">
+                  {user.must_change_password ? 'Si' : 'No'}
+                </td>
+                <td className="border-y border-slate-200 px-3 py-3 text-slate-600">{formatDate(user.created_at)}</td>
+                <td className="rounded-r-lg border-y border-r border-slate-200 px-3 py-3">
+                  <div className="flex flex-wrap justify-end gap-2">
+                    <button
+                      className="secondary-button inline-flex items-center gap-2"
+                      type="button"
+                      onClick={() => resetPassword(user)}
+                      disabled={busyUserId === user.id}
+                    >
+                      <KeyRound size={16} />
+                      Reiniciar
+                    </button>
+                    {user.is_active ? (
+                      <button
+                        className="secondary-button inline-flex items-center gap-2"
+                        type="button"
+                        onClick={() => setUserLock(user, true)}
+                        disabled={busyUserId === user.id}
+                      >
+                        <Lock size={16} />
+                        Bloquear
+                      </button>
+                    ) : (
+                      <button
+                        className="secondary-button inline-flex items-center gap-2"
+                        type="button"
+                        onClick={() => setUserLock(user, false)}
+                        disabled={busyUserId === user.id}
+                      >
+                        <Unlock size={16} />
+                        Desbloquear
+                      </button>
+                    )}
+                  </div>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  );
+}
+
 function ProfileView({
   user,
   onUpdated,
@@ -4211,6 +4421,16 @@ function assistantSourceLabel(source: string) {
     knowledge: 'Ayuda FIDUCIA',
   };
   return labels[source] ?? source;
+}
+
+function supportRoleLabel(role: string) {
+  const labels: Record<string, string> = {
+    ADMIN: 'Administrador',
+    SUPPORT: 'Soporte',
+    RISK_ANALYST: 'Analista de riesgo',
+    CLIENT: 'Cliente',
+  };
+  return labels[role] ?? role;
 }
 
 function formatDate(value: string) {

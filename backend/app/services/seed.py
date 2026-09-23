@@ -19,6 +19,7 @@ from app.models.transaction import Transaction
 DEFAULT_ROLES = [
     ("CLIENT", "Cliente FIDUCIA"),
     ("RISK_ANALYST", "Analista de riesgos"),
+    ("SUPPORT", "Soporte de usuarios"),
     ("ADMIN", "Administrador"),
 ]
 

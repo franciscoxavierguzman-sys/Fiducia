@@ -25,7 +25,7 @@ router = APIRouter()
 @router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
 def register(payload: UserCreate, db: Session = Depends(get_db)) -> UserRead:
     role = "CLIENT" if payload.role == "sender" else payload.role
-    if role not in {"CLIENT", "RISK_ANALYST", "ADMIN"}:
+    if role not in {"CLIENT", "RISK_ANALYST", "SUPPORT", "ADMIN"}:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail={"code": "INVALID_ROLE", "message": "Rol no permitido"},
@@ -72,6 +72,11 @@ def login(payload: LoginRequest, request: Request, db: Session = Depends(get_db)
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail={"code": "INVALID_CREDENTIALS", "message": "Correo o contrasena incorrectos"},
+        )
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail={"code": "USER_LOCKED", "message": "Usuario bloqueado. Contacta a soporte."},
         )
 
     log_audit_event(

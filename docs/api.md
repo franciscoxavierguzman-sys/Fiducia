@@ -11,13 +11,19 @@ POST /api/v1/auth/password/forgot
 POST /api/v1/auth/password/change
 GET  /api/v1/users/me
 PATCH /api/v1/users/me
+GET  /api/v1/users
+POST /api/v1/users/{user_id}/password-reset
+POST /api/v1/users/{user_id}/lock
+POST /api/v1/users/{user_id}/unlock
 ```
 
 Los endpoints funcionales de Fase 2 requieren token Bearer.
 
-El registro crea usuarios `CLIENT` y requiere confirmacion de contrasena, aceptacion de terminos, verificacion humana simulada, tipo de documento, numero de documento y fecha de nacimiento. Para `DPI`, el numero debe contener exactamente 13 digitos. Para `PASSPORT`, el numero acepta de 6 a 20 caracteres alfanumericos o guiones.
+El registro crea usuarios `CLIENT` por defecto y permite roles internos controlados para demo (`SUPPORT`, `RISK_ANALYST`, `ADMIN`). Requiere confirmacion de contrasena, aceptacion de terminos, verificacion humana simulada, tipo de documento, numero de documento y fecha de nacimiento. Para `DPI`, el numero debe contener exactamente 13 digitos. Para `PASSPORT`, el numero acepta de 6 a 20 caracteres alfanumericos o guiones.
 
 La recuperacion de contrasena genera una contrasena temporal para correos registrados, marca al usuario con cambio obligatorio y registra un correo simulado en `database/mail_outbox.jsonl`. En entorno local de demostracion la respuesta puede incluir la contrasena temporal para facilitar la prueba. Al iniciar sesion con esa contrasena, el frontend solicita definir una nueva antes de continuar.
+
+Los endpoints `/users`, `/users/{user_id}/password-reset`, `/users/{user_id}/lock` y `/users/{user_id}/unlock` requieren rol `SUPPORT` o `ADMIN`. El reinicio de contrasena envia correo de recuperacion, marca `must_change_password=true` y obliga al usuario a crear una nueva contrasena al ingresar. Una cuenta bloqueada no puede iniciar sesion hasta que soporte la desbloquee.
 
 ## Catalogos
 
