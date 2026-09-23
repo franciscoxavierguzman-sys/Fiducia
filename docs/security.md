@@ -16,6 +16,8 @@ FIDUCIA implementa controles proporcionales a un prototipo local integrado:
 
 El rol `SUPPORT` esta limitado a gestion de usuarios, reinicio de contrasenas y bloqueo/desbloqueo de cuentas. El frontend no expone dashboard, remesas, pagos, analitica, riesgo ni blockchain para este perfil.
 
+El marketplace de demostracion solo permite pagar con remesas `COMPLETED` donde el usuario autenticado es beneficiario vinculado. El saldo se deriva de la remesa recibida menos ordenes `PAID`; no usa tarjetas, cuentas reales ni pasarelas externas.
+
 ## Limitaciones
 
 FIDUCIA no implementa rotacion automatica de secretos, gestor productivo de secretos, rate limiting distribuido, politicas avanzadas de sesion, monitoreo externo ni politica CORS productiva definitiva. Estos controles quedan documentados como mejoras futuras.

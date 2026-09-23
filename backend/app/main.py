@@ -20,6 +20,7 @@ from app.models import (
     exchange_rate,
     forecast,
     funding_source,
+    marketplace,
     municipality,
     remittance_corridor,
     risk_assessment,

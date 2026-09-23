@@ -14,6 +14,7 @@
 | Ver remesas propias | Si | No | Si | Si |
 | Recibir remesa propia | Si | No | Si | Si |
 | Tracking propio | Si | No | Si | Si |
+| Marketplace con remesas recibidas | Si | No | Si | Si |
 | Risk dashboard | No | No | Si | Si |
 | Ver evaluaciones de riesgo | No | No | Si | Si |
 | Revisar evaluacion | No | No | Si | Si |

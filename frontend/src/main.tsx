@@ -15,6 +15,7 @@ import {
   Search,
   Send,
   ShieldCheck,
+  ShoppingBag,
   Unlock,
   X,
   UserCircle,
@@ -234,6 +235,47 @@ type Transaction = Simulation & {
   beneficiary: Beneficiary;
   sender: User;
 };
+
+type MarketplaceProduct = {
+  id: number;
+  sku: string;
+  name: string;
+  description: string;
+  category: string;
+  price_amount: string;
+  currency: string;
+  stock: number;
+  image_url: string | null;
+  is_active: boolean;
+};
+type MarketplaceBalance = {
+  transaction_id: number;
+  remittance_number: string;
+  currency: string;
+  original_amount: string;
+  spent_amount: string;
+  available_amount: string;
+  completed_at: string;
+};
+type MarketplaceOrder = {
+  id: number;
+  order_number: string;
+  remittance_transaction_id: number;
+  status: string;
+  subtotal_amount: string;
+  total_amount: string;
+  currency: string;
+  created_at: string;
+  items: Array<{
+    id: number;
+    product_id: number;
+    quantity: number;
+    unit_price_amount: string;
+    total_amount: string;
+    product: MarketplaceProduct;
+  }>;
+};
+
 type AnalyticsSummary = {
   total_remittances: number;
   volume_usd_equivalent: string;
@@ -575,6 +617,7 @@ type View =
   | 'new-remittance'
   | 'sent'
   | 'received'
+  | 'marketplace'
   | 'tracking'
   | 'profile'
   | 'detail'
@@ -808,6 +851,7 @@ function App() {
                 <NavButton active={view === 'new-remittance'} onClick={() => setView('new-remittance')} label="Enviar remesa" />
                 <NavButton active={view === 'sent'} onClick={() => setView('sent')} label="Remesas enviadas" />
                 <NavButton active={view === 'received'} onClick={() => setView('received')} label="Remesas recibidas" />
+                <NavButton active={view === 'marketplace'} onClick={() => setView('marketplace')} label="Marketplace" />
                 <NavButton active={view === 'beneficiaries'} onClick={() => setView('beneficiaries')} label="Beneficiarios" />
                 <NavButton active={view === 'funding'} onClick={() => setView('funding')} label="Metodos de pago" />
                 <NavButton active={view === 'tracking'} onClick={() => setView('tracking')} label="Rastrear remesa" />
@@ -859,6 +903,7 @@ function App() {
               onNewRemittance={() => setView('new-remittance')}
               onSent={() => setView('sent')}
               onReceived={() => setView('received')}
+              onMarketplace={() => setView('marketplace')}
               onFunding={() => setView('funding')}
               onTracking={() => setView('tracking')}
               onProfile={() => setView('profile')}
@@ -894,6 +939,7 @@ function App() {
             />
           ) : null}
           {!currentUser.must_change_password && view === 'tracking' ? <TrackingView showMessage={showMessage} /> : null}
+          {!currentUser.must_change_password && view === 'marketplace' && !isSupport ? <MarketplaceView showMessage={showMessage} /> : null}
           {!currentUser.must_change_password && view === 'bi' && canViewAnalytics ? <BusinessIntelligenceView /> : null}
           {!currentUser.must_change_password && view === 'analytics' && canViewAnalytics ? <AnalyticsView /> : null}
           {!currentUser.must_change_password && view === 'forecasting' && canViewAnalytics ? <ForecastingView /> : null}
@@ -1351,6 +1397,7 @@ function Dashboard({
   onNewRemittance,
   onSent,
   onReceived,
+  onMarketplace,
   onFunding,
   onTracking,
   onProfile,
@@ -1363,6 +1410,7 @@ function Dashboard({
   onNewRemittance: () => void;
   onSent: () => void;
   onReceived: () => void;
+  onMarketplace: () => void;
   onFunding: () => void;
   onTracking: () => void;
   onProfile: () => void;
@@ -1395,6 +1443,10 @@ function Dashboard({
           <button className="secondary-button inline-flex items-center gap-2" type="button" onClick={onReceived}>
             <Inbox size={18} />
             Remesas recibidas
+          </button>
+          <button className="secondary-button inline-flex items-center gap-2" type="button" onClick={onMarketplace}>
+            <ShoppingBag size={18} />
+            Marketplace
           </button>
           <button className="secondary-button inline-flex items-center gap-2" type="button" onClick={onFunding}>
             <CreditCard size={18} />
@@ -3697,6 +3749,198 @@ function TrackingView({ showMessage }: { showMessage: (message: string, type: Me
         </div>
       ) : null}
     </section>
+  );
+}
+
+function MarketplaceView({ showMessage }: { showMessage: (message: string, type: MessageType) => void }) {
+  const [products, setProducts] = React.useState<MarketplaceProduct[]>([]);
+  const [balances, setBalances] = React.useState<MarketplaceBalance[]>([]);
+  const [orders, setOrders] = React.useState<MarketplaceOrder[]>([]);
+  const [selectedRemittanceId, setSelectedRemittanceId] = React.useState('');
+  const [quantities, setQuantities] = React.useState<Record<number, number>>({});
+  const [isLoading, setIsLoading] = React.useState(true);
+  const [busyProductId, setBusyProductId] = React.useState<number | null>(null);
+
+  React.useEffect(() => {
+    loadMarketplace();
+  }, []);
+
+  async function loadMarketplace() {
+    setIsLoading(true);
+    try {
+      const [productData, balanceData, orderData] = await Promise.all([
+        request<MarketplaceProduct[]>('/marketplace/products'),
+        request<MarketplaceBalance[]>('/marketplace/balances'),
+        request<MarketplaceOrder[]>('/marketplace/orders'),
+      ]);
+      setProducts(productData);
+      setBalances(balanceData);
+      setOrders(orderData);
+      setSelectedRemittanceId((current) => current || balanceData.find((balance) => Number(balance.available_amount) > 0)?.transaction_id.toString() || '');
+    } catch {
+      showMessage('No se pudo cargar el marketplace.', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  async function buyProduct(product: MarketplaceProduct) {
+    const quantity = quantities[product.id] || 1;
+    if (!selectedRemittanceId) {
+      showMessage('Selecciona una remesa recibida con saldo disponible.', 'error');
+      return;
+    }
+    setBusyProductId(product.id);
+    try {
+      const order = await request<MarketplaceOrder>('/marketplace/orders', {
+        method: 'POST',
+        body: JSON.stringify({
+          remittance_transaction_id: Number(selectedRemittanceId),
+          items: [{ product_id: product.id, quantity }],
+        }),
+      });
+      showMessage(`Compra ${order.order_number} pagada con remesa.`, 'success');
+      setQuantities((current) => ({ ...current, [product.id]: 1 }));
+      await loadMarketplace();
+    } catch (error) {
+      const code = error instanceof ApiRequestError ? error.code : 'REQUEST_FAILED';
+      const messages: Record<string, string> = {
+        REMITTANCE_NOT_COMPLETED: 'La remesa seleccionada aun no esta recibida.',
+        INSUFFICIENT_REMITTANCE_BALANCE: 'Saldo insuficiente en la remesa seleccionada.',
+        INSUFFICIENT_STOCK: 'Inventario insuficiente para ese producto.',
+        CURRENCY_MISMATCH: 'La moneda de la remesa no coincide con el producto.',
+      };
+      showMessage(messages[code] ?? 'No se pudo completar la compra.', 'error');
+    } finally {
+      setBusyProductId(null);
+    }
+  }
+
+  const selectedBalance = balances.find((balance) => balance.transaction_id.toString() === selectedRemittanceId);
+
+  return (
+    <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
+      <section className="panel">
+        <p className="text-xs font-semibold uppercase tracking-widest text-fiducia-teal">Marketplace FIDUCIA</p>
+        <h2 className="section-title mt-1">Compra con tus remesas recibidas</h2>
+        <p className="mt-2 text-sm leading-6 text-slate-600">
+          Usa el saldo disponible de una remesa completada para adquirir productos y servicios de demostracion.
+        </p>
+
+        <div className="mt-5">
+          <SelectInput
+            label="Remesa para pagar"
+            value={selectedRemittanceId}
+            options={[
+              { value: '', label: balances.length ? 'Selecciona una remesa' : 'No hay remesas con saldo' },
+              ...balances.map((balance) => ({
+                value: balance.transaction_id.toString(),
+                label: `${balance.remittance_number} - disponible ${balance.currency} ${formatMoney(balance.available_amount)}`,
+              })),
+            ]}
+            onChange={setSelectedRemittanceId}
+          />
+        </div>
+
+        {selectedBalance ? (
+          <div className="mt-5 grid gap-3">
+            <SummaryRow label="Monto recibido" value={`${selectedBalance.currency} ${formatMoney(selectedBalance.original_amount)}`} />
+            <SummaryRow label="Usado en marketplace" value={`${selectedBalance.currency} ${formatMoney(selectedBalance.spent_amount)}`} />
+            <SummaryRow label="Saldo disponible" value={`${selectedBalance.currency} ${formatMoney(selectedBalance.available_amount)}`} />
+          </div>
+        ) : (
+          <EmptyState text="Recibe una remesa vinculada a tu correo para habilitar compras." />
+        )}
+
+        <button className="secondary-button mt-5 inline-flex items-center gap-2" type="button" onClick={loadMarketplace} disabled={isLoading}>
+          <Search size={16} />
+          Actualizar marketplace
+        </button>
+      </section>
+
+      <section className="panel">
+        <h2 className="section-title">Catalogo</h2>
+        <div className="mt-5 grid gap-4 md:grid-cols-2">
+          {isLoading ? <EmptyState text="Cargando productos..." /> : null}
+          {!isLoading && products.length === 0 ? <EmptyState text="No hay productos disponibles." /> : null}
+          {products.map((product) => {
+            const quantity = quantities[product.id] || 1;
+            return (
+              <div className="rounded-lg border border-slate-200 bg-white p-4" key={product.id}>
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <span className="rounded-full bg-fiducia-mint px-3 py-1 text-xs font-semibold text-fiducia-teal">
+                      {product.category}
+                    </span>
+                    <h3 className="mt-3 font-semibold text-fiducia-navy">{product.name}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-600">{product.description}</p>
+                  </div>
+                  <ShoppingBag className="text-fiducia-teal" size={22} />
+                </div>
+                <div className="mt-4 flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-lg font-bold text-fiducia-navy">
+                      {product.currency} {formatMoney(product.price_amount)}
+                    </p>
+                    <p className="text-xs text-slate-500">Inventario: {product.stock}</p>
+                  </div>
+                  <label className="w-24">
+                    <span className="mb-1 block text-xs font-medium text-slate-600">Cantidad</span>
+                    <input
+                      className="w-full rounded-md border border-slate-300 px-3 py-2 outline-none transition focus:border-fiducia-teal focus:ring-2 focus:ring-fiducia-mint"
+                      min={1}
+                      max={Math.min(product.stock, 20)}
+                      type="number"
+                      value={quantity}
+                      onChange={(event) =>
+                        setQuantities({
+                          ...quantities,
+                          [product.id]: Math.max(1, Math.min(Number(event.target.value || 1), Math.min(product.stock, 20))),
+                        })
+                      }
+                    />
+                  </label>
+                </div>
+                <button
+                  className="primary-button mt-4 w-full"
+                  type="button"
+                  onClick={() => buyProduct(product)}
+                  disabled={busyProductId === product.id || !selectedRemittanceId || product.stock <= 0}
+                >
+                  {busyProductId === product.id ? 'Procesando...' : 'Comprar con remesa'}
+                </button>
+              </div>
+            );
+          })}
+        </div>
+      </section>
+
+      <section className="panel lg:col-span-2">
+        <h2 className="section-title">Compras recientes</h2>
+        <div className="mt-4 grid gap-3">
+          {orders.length === 0 ? <EmptyState text="Aun no has comprado en el marketplace." /> : null}
+          {orders.slice(0, 6).map((order) => (
+            <div className="rounded-lg border border-slate-200 bg-white p-4" key={order.id}>
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-fiducia-navy">{order.order_number}</p>
+                  <p className="text-sm text-slate-500">{formatDate(order.created_at)}</p>
+                  <p className="mt-2 text-sm text-slate-600">
+                    {order.items.map((item) => `${item.quantity} x ${item.product.name}`).join(', ')}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <p className="font-bold text-fiducia-navy">
+                    {order.currency} {formatMoney(order.total_amount)}
+                  </p>
+                  <p className="text-xs font-semibold text-emerald-700">{order.status}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
   );
 }
 

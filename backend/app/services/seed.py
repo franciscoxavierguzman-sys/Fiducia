@@ -9,6 +9,7 @@ from app.models.beneficiary_relationship import BeneficiaryRelationship
 from app.models.country import Country
 from app.models.department import Department
 from app.models.exchange_rate import ExchangeRate
+from app.models.marketplace import MarketplaceProduct
 from app.models.municipality import Municipality
 from app.models.remittance_corridor import RemittanceCorridor
 from app.models.remittance_status_history import RemittanceStatusHistory
@@ -62,6 +63,45 @@ DEFAULT_EXCHANGE_RATES = [
     ("GTQ", "MXN", "2.173913"),
     ("EUR", "GTQ", "8.50"),
     ("GTQ", "EUR", "0.117647"),
+]
+
+DEFAULT_MARKETPLACE_PRODUCTS = [
+    (
+        "MKT-PANTRY-001",
+        "Canasta esencial",
+        "Productos basicos para el hogar: granos, aceite, azucar y articulos de limpieza.",
+        "Hogar",
+        "285.00",
+        "GTQ",
+        50,
+    ),
+    (
+        "MKT-MOBILE-001",
+        "Recarga movil familiar",
+        "Paquete de saldo y datos para comunicacion familiar.",
+        "Servicios",
+        "75.00",
+        "GTQ",
+        100,
+    ),
+    (
+        "MKT-PHARMA-001",
+        "Vale farmacia",
+        "Credito de consumo para medicamentos y articulos de cuidado personal.",
+        "Salud",
+        "150.00",
+        "GTQ",
+        40,
+    ),
+    (
+        "MKT-SCHOOL-001",
+        "Kit escolar",
+        "Cuadernos, utiles escolares y mochila basica.",
+        "Educacion",
+        "225.00",
+        "GTQ",
+        35,
+    ),
 ]
 
 
@@ -143,6 +183,28 @@ def seed_default_roles() -> None:
                         effective_date=date.today(),
                     )
                 )
+
+        for sku, name, description, category, price_amount, currency, stock in DEFAULT_MARKETPLACE_PRODUCTS:
+            product = db.scalar(select(MarketplaceProduct).where(MarketplaceProduct.sku == sku))
+            if product is None:
+                db.add(
+                    MarketplaceProduct(
+                        sku=sku,
+                        name=name,
+                        description=description,
+                        category=category,
+                        price_amount=Decimal(price_amount),
+                        currency=currency,
+                        stock=stock,
+                    )
+                )
+            else:
+                product.name = name
+                product.description = description
+                product.category = category
+                product.price_amount = Decimal(price_amount)
+                product.currency = currency
+                product.is_active = True
 
         for origin_name, destination_name in [
             ("Estados Unidos", "Guatemala"),

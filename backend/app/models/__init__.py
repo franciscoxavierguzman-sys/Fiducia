@@ -8,6 +8,7 @@ from app.models.department import Department
 from app.models.exchange_rate import ExchangeRate
 from app.models.forecast import ForecastRun, ForecastValue
 from app.models.funding_source import FundingSource
+from app.models.marketplace import MarketplaceOrder, MarketplaceOrderItem, MarketplaceProduct
 from app.models.municipality import Municipality
 from app.models.remittance_corridor import RemittanceCorridor
 from app.models.remittance_status_history import RemittanceStatusHistory
@@ -29,6 +30,9 @@ __all__ = [
     "ForecastRun",
     "ForecastValue",
     "FundingSource",
+    "MarketplaceOrder",
+    "MarketplaceOrderItem",
+    "MarketplaceProduct",
     "Municipality",
     "RemittanceCorridor",
     "RemittanceStatusHistory",

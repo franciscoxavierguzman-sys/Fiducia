@@ -76,6 +76,46 @@ Para rutas `USD -> GTQ`, el monto de la remesa se mantiene expresado en `USD`, p
 
 En el detalle de remesa, la interfaz normaliza monedas historicas incompletas para mostrar `Quetzales (GTQ)` cuando el destino es Guatemala. Tambien permite imprimir un comprobante con remitente, beneficiario, montos, tipo de cambio, metodo de pago, metodo de entrega y estado.
 
+## Marketplace
+
+```text
+GET  /api/v1/marketplace/products
+GET  /api/v1/marketplace/balances
+GET  /api/v1/marketplace/orders
+POST /api/v1/marketplace/orders
+```
+
+El marketplace permite comprar productos de demostracion usando saldos de remesas recibidas. Para que una remesa sea elegible debe:
+
+- pertenecer al usuario autenticado como beneficiario;
+- estar en estado `COMPLETED`;
+- tener moneda compatible con el producto, actualmente `GTQ`;
+- conservar saldo disponible despues de compras previas.
+
+El saldo disponible se calcula como `destination_amount - compras pagadas` sobre la misma remesa. La compra crea una orden `PAID`, descuenta inventario del producto y registra auditoria `MARKETPLACE_ORDER_PAID`.
+
+Ejemplo de compra:
+
+```json
+{
+  "remittance_transaction_id": 5,
+  "items": [
+    {
+      "product_id": 1,
+      "quantity": 1
+    }
+  ]
+}
+```
+
+Errores relevantes:
+
+- `REMITTANCE_NOT_FOUND`: la remesa no pertenece al usuario autenticado.
+- `REMITTANCE_NOT_COMPLETED`: la remesa aun no fue recibida.
+- `INSUFFICIENT_REMITTANCE_BALANCE`: saldo insuficiente.
+- `INSUFFICIENT_STOCK`: inventario insuficiente.
+- `CURRENCY_MISMATCH`: moneda incompatible.
+
 Campos principales:
 
 ```json
