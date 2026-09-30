@@ -623,6 +623,7 @@ type View =
   | 'detail'
   | 'bi'
   | 'analytics'
+  | 'research'
   | 'risk'
   | 'risk-review'
   | 'blockchain'
@@ -675,7 +676,7 @@ function App() {
   const canViewAnalytics = currentUser?.role.name === 'ADMIN' || currentUser?.role.name === 'RISK_ANALYST';
 
   React.useEffect(() => {
-    const internalViews: View[] = ['bi', 'analytics', 'forecasting', 'risk', 'risk-review', 'blockchain'];
+    const internalViews: View[] = ['bi', 'analytics', 'research', 'forecasting', 'risk', 'risk-review', 'blockchain'];
     if (currentUser && !canViewAnalytics && internalViews.includes(view)) {
       setView('dashboard');
       showMessage('Esta vista esta reservada para perfiles internos autorizados.', 'error');
@@ -846,15 +847,15 @@ function App() {
               </>
             ) : (
               <>
+                <NavGroupLabel label="Operacion" />
                 <NavButton active={view === 'dashboard'} onClick={() => setView('dashboard')} label="Inicio" />
-                <NavButton active={view === 'assistant'} onClick={() => setView('assistant')} label="Asistente" />
                 <NavButton active={view === 'new-remittance'} onClick={() => setView('new-remittance')} label="Enviar remesa" />
                 <NavButton active={view === 'sent'} onClick={() => setView('sent')} label="Remesas enviadas" />
                 <NavButton active={view === 'received'} onClick={() => setView('received')} label="Remesas recibidas" />
-                <NavButton active={view === 'marketplace'} onClick={() => setView('marketplace')} label="Marketplace" />
                 <NavButton active={view === 'beneficiaries'} onClick={() => setView('beneficiaries')} label="Beneficiarios" />
                 <NavButton active={view === 'funding'} onClick={() => setView('funding')} label="Metodos de pago" />
                 <NavButton active={view === 'tracking'} onClick={() => setView('tracking')} label="Rastrear remesa" />
+                {canViewAnalytics ? <NavGroupLabel label="Riesgo y analitica" /> : null}
                 {canViewAnalytics ? (
                   <NavButton active={view === 'bi'} onClick={() => setView('bi')} label="Inteligencia de negocio" />
                 ) : null}
@@ -862,13 +863,19 @@ function App() {
                   <NavButton active={view === 'analytics'} onClick={() => setView('analytics')} label="Analitica" />
                 ) : null}
                 {canViewAnalytics ? (
-                  <NavButton active={view === 'forecasting'} onClick={() => setView('forecasting')} label="Analitica predictiva" />
-                ) : null}
-                {canViewAnalytics ? (
                   <NavButton active={view === 'risk'} onClick={() => setView('risk')} label="Inteligencia de riesgo" />
                 ) : null}
                 {canViewAnalytics ? (
                   <NavButton active={view === 'risk-review'} onClick={() => setView('risk-review')} label="Revision de riesgo" />
+                ) : null}
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'research'} onClick={() => setView('research')} label="Resultados de investigacion" />
+                ) : null}
+                <NavGroupLabel label="Complementarios" />
+                <NavButton active={view === 'assistant'} onClick={() => setView('assistant')} label="Asistente" />
+                <NavButton active={view === 'marketplace'} onClick={() => setView('marketplace')} label="Marketplace" />
+                {canViewAnalytics ? (
+                  <NavButton active={view === 'forecasting'} onClick={() => setView('forecasting')} label="Analitica predictiva" />
                 ) : null}
                 {canViewAnalytics ? (
                   <NavButton active={view === 'blockchain'} onClick={() => setView('blockchain')} label="Trazabilidad blockchain" />
@@ -942,8 +949,9 @@ function App() {
           {!currentUser.must_change_password && view === 'marketplace' && !isSupport ? <MarketplaceView showMessage={showMessage} /> : null}
           {!currentUser.must_change_password && view === 'bi' && canViewAnalytics ? <BusinessIntelligenceView /> : null}
           {!currentUser.must_change_password && view === 'analytics' && canViewAnalytics ? <AnalyticsView /> : null}
+          {!currentUser.must_change_password && view === 'research' && canViewAnalytics ? <ResearchPerformanceView onRiskIntelligence={() => setView('risk')} /> : null}
           {!currentUser.must_change_password && view === 'forecasting' && canViewAnalytics ? <ForecastingView /> : null}
-          {!currentUser.must_change_password && view === 'risk' && canViewAnalytics ? <RiskIntelligenceView /> : null}
+          {!currentUser.must_change_password && view === 'risk' && canViewAnalytics ? <RiskIntelligenceView onResearch={() => setView('research')} /> : null}
           {!currentUser.must_change_password && view === 'risk-review' && canViewAnalytics ? <RiskReviewView showMessage={showMessage} /> : null}
           {!currentUser.must_change_password && view === 'blockchain' && canViewAnalytics ? <BlockchainView user={currentUser} transactions={[...transactions, ...receivedTransactions]} /> : null}
           {!currentUser.must_change_password && view === 'profile' ? (
@@ -1044,13 +1052,16 @@ function LandingLogin(props: {
           className="mb-5 max-h-64 w-full max-w-2xl object-contain"
         />
         <p className="mb-2 text-xs font-semibold uppercase tracking-widest text-fiducia-teal">
-          Remesas digitales con analitica e IA
+          Prototipo academico de investigacion
         </p>
         <h1 className="max-w-3xl text-4xl font-bold leading-tight text-fiducia-navy">
           Envia mas. Paga menos. Decide mejor.
         </h1>
         <p className="mt-4 max-w-2xl text-base leading-7 text-slate-600">
           Plataforma para gestionar beneficiarios, cotizar envios, crear remesas y consultar historial.
+        </p>
+        <p className="mt-3 max-w-2xl rounded-md border border-slate-200 bg-white p-3 text-sm leading-6 text-slate-600">
+          FIDUCIA es un prototipo tecnologico desarrollado con fines educativos y de investigacion. No constituye una entidad financiera ni un servicio real de remesas.
         </p>
         <div className="mt-5 grid gap-3 sm:grid-cols-3">
           <Feature icon={<ShieldCheck />} title="Seguridad base" text="JWT, roles y contrasenas hasheadas." />
@@ -1424,6 +1435,9 @@ function Dashboard({
         <p className="text-sm font-semibold uppercase tracking-widest text-fiducia-teal">Inicio cliente</p>
         <h1 className="mt-3 text-3xl font-bold text-fiducia-navy">Hola, {user.first_name}</h1>
         <p className="mt-3 text-slate-600">Envia, consulta y recibe remesas desde un solo lugar.</p>
+        <p className="mt-3 rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+          Prototipo academico de investigacion. No constituye una entidad financiera ni un servicio real de remesas.
+        </p>
         <div className="mt-6 grid gap-3 sm:grid-cols-4">
           <Metric label="Beneficiarios" value={beneficiaries.length.toString()} />
           <Metric label="Enviadas" value={transactions.length.toString()} />
@@ -1748,6 +1762,177 @@ function AnalyticsView() {
   );
 }
 
+const e5Metrics = [
+  { label: 'PR-AUC', value: '0.8817' },
+  { label: 'ROC-AUC', value: '0.9985' },
+  { label: 'Precision', value: '96.75 %' },
+  { label: 'Recall', value: '68.25 %' },
+  { label: 'F1', value: '80.04 %' },
+];
+
+const temporalSplit = [
+  { name: 'TRAIN', steps: 'Steps 1-323', records: '4,463,587 registros', frauds: '3,643 fraudes' },
+  { name: 'VALIDATION', steps: 'Steps 324-377', records: '943,289 registros', frauds: '560 fraudes' },
+  { name: 'TEST', steps: 'Steps 378-743', records: '955,744 registros', frauds: '4,010 fraudes' },
+];
+
+const experimentSequence = [
+  ['E0', 'Dummy'],
+  ['E1', 'Logistic Regression'],
+  ['E2', 'HistGradientBoosting'],
+  ['E3', 'HistGradientBoosting + Historical Features'],
+  ['E4', 'Risk Engine 30/50/20'],
+  ['E4.1', 'Architecture Selection'],
+  ['E5', 'Final Holdout Evaluation - LightGBM'],
+];
+
+function ResearchPerformanceView({ onRiskIntelligence }: { onRiskIntelligence: () => void }) {
+  return (
+    <div className="grid gap-6">
+      <section className="panel border-l-4 border-l-fiducia-teal">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-fiducia-teal">Resultados experimentales</p>
+            <h1 className="mt-2 text-3xl font-bold text-fiducia-navy">Resultados de Investigacion</h1>
+            <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-600">
+              Evaluacion experimental del modelo de riesgo transaccional. Esta pantalla resume la configuracion academica final E5
+              y no representa monitoreo de produccion.
+            </p>
+          </div>
+          <button className="secondary-button" type="button" onClick={onRiskIntelligence}>
+            Ver evidencia historica
+          </button>
+        </div>
+        <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm font-medium leading-6 text-amber-900">
+          Resultados experimentales obtenidos sobre el dataset sintetico PaySim. No representan desempeno validado sobre remesas reales de Guatemala.
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[0.85fr_1.15fr]">
+        <div className="panel">
+          <h2 className="section-title">Dataset</h2>
+          <div className="mt-5 grid gap-3">
+            <Metric label="Nombre" value="PaySim" />
+            <Metric label="Tipo" value="Dataset sintetico de transacciones de dinero movil" />
+            <Metric label="Total" value="6,362,620 transacciones" />
+            <Metric label="Fraudes" value="8,213" />
+            <Metric label="Tasa de fraude" value="0.1291 %" />
+          </div>
+          <p className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+            PaySim es un dataset sintetico utilizado con fines experimentales. No representa transacciones reales de remesas de Guatemala.
+          </p>
+        </div>
+
+        <div className="panel">
+          <h2 className="section-title">Split temporal</h2>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {temporalSplit.map((item) => (
+              <div className="rounded-lg border border-slate-200 bg-white p-4" key={item.name}>
+                <p className="text-xs font-bold uppercase tracking-widest text-fiducia-teal">{item.name}</p>
+                <p className="mt-3 font-semibold text-fiducia-navy">{item.steps}</p>
+                <p className="mt-2 text-sm text-slate-600">{item.records}</p>
+                <p className="text-sm text-slate-600">{item.frauds}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mt-5 text-sm leading-6 text-slate-600">
+            TEST permanecio bloqueado durante el desarrollo y fue utilizado unicamente para la evaluacion final E5.
+          </p>
+        </div>
+      </section>
+
+      <section className="panel">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 className="section-title">Modelo experimental final</h2>
+            <p className="mt-2 text-sm text-slate-500">LightGBM con variables historicas derivadas sin leakage.</p>
+          </div>
+          <span className="rounded-full bg-fiducia-mint px-4 py-2 text-sm font-bold text-fiducia-teal">E5 Final Holdout</span>
+        </div>
+        <div className="mt-5 grid gap-3 md:grid-cols-4">
+          <Metric label="Machine Learning" value="Componente predictivo principal" />
+          <Metric label="Rules" value="Senales explicables complementarias" />
+          <Metric label="Anomaly Detection" value="Senal complementaria" />
+          <Metric label="Human Review" value="Decision / revision humana" />
+        </div>
+        <div className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500">Arquitectura evaluada previamente - E4</p>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            `risk-engine-v1.1` con Rules 30 %, ML 50 % y Anomaly 20 % se conserva como evidencia historica evaluada, no como arquitectura predictiva final seleccionada.
+          </p>
+        </div>
+      </section>
+
+      <section className="grid gap-6 lg:grid-cols-[0.7fr_1.3fr]">
+        <div className="panel">
+          <h2 className="section-title">Threshold final</h2>
+          <p className="mt-5 break-all text-2xl font-bold text-fiducia-navy">0.9946945188209642</p>
+          <p className="mt-4 text-sm leading-6 text-slate-600">
+            Seleccionado utilizando VALIDATION y congelado antes de la evaluacion sobre TEST.
+          </p>
+        </div>
+        <div className="panel">
+          <h2 className="section-title">Metricas E5</h2>
+          <p className="mt-2 text-sm text-slate-500">Evaluacion final E5 sobre holdout temporal TEST.</p>
+          <div className="mt-5 grid gap-3 sm:grid-cols-5">
+            {e5Metrics.map((metric) => (
+              <Metric key={metric.label} label={metric.label} value={metric.value} />
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="panel">
+        <h2 className="section-title">Matriz de confusion</h2>
+        <div className="mt-5 overflow-x-auto">
+          <table className="w-full min-w-[620px] border-separate border-spacing-2 text-center text-sm">
+            <thead className="text-slate-500">
+              <tr>
+                <th />
+                <th className="rounded-md bg-slate-100 px-4 py-3">Predicho positivo</th>
+                <th className="rounded-md bg-slate-100 px-4 py-3">Predicho negativo</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th className="rounded-md bg-slate-100 px-4 py-3 text-left text-slate-500">Positivo real</th>
+                <td className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-4 text-xl font-bold text-fiducia-navy">2,737</td>
+                <td className="rounded-md border border-amber-200 bg-amber-50 px-4 py-4 text-xl font-bold text-fiducia-navy">1,273</td>
+              </tr>
+              <tr>
+                <th className="rounded-md bg-slate-100 px-4 py-3 text-left text-slate-500">Negativo real</th>
+                <td className="rounded-md border border-amber-200 bg-amber-50 px-4 py-4 text-xl font-bold text-fiducia-navy">92</td>
+                <td className="rounded-md border border-emerald-200 bg-emerald-50 px-4 py-4 text-xl font-bold text-fiducia-navy">951,642</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div className="mt-5 grid gap-3 sm:grid-cols-4">
+          <Metric label="TP" value="2,737" />
+          <Metric label="FP" value="92" />
+          <Metric label="TN" value="951,642" />
+          <Metric label="FN" value="1,273" />
+        </div>
+        <p className="mt-5 rounded-md border border-slate-200 bg-slate-50 p-4 text-sm leading-6 text-slate-600">
+          Los 1,273 falsos negativos muestran que el modelo no debe interpretarse como mecanismo autonomo para confirmar o descartar fraude.
+        </p>
+      </section>
+
+      <section className="panel">
+        <h2 className="section-title">Evolucion experimental</h2>
+        <div className="mt-5 grid gap-3 md:grid-cols-7">
+          {experimentSequence.map(([code, label]) => (
+            <div className="rounded-lg border border-slate-200 bg-white p-4" key={code}>
+              <p className="text-lg font-bold text-fiducia-teal">{code}</p>
+              <p className="mt-2 text-sm font-semibold leading-5 text-fiducia-navy">{label}</p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
 function BusinessIntelligenceView() {
   const [overview, setOverview] = React.useState<BIOverview | null>(null);
   const [trends, setTrends] = React.useState<BITrendPoint[]>([]);
@@ -2050,7 +2235,7 @@ function BusinessIntelligenceView() {
   );
 }
 
-function RiskIntelligenceView() {
+function RiskIntelligenceView({ onResearch }: { onResearch: () => void }) {
   const [modelInfo, setModelInfo] = React.useState<RiskModelInfo | null>(null);
   const [engineInfo, setEngineInfo] = React.useState<RiskEngineInfo | null>(null);
   const [dashboard, setDashboard] = React.useState<RiskDashboardMetrics | null>(null);
@@ -2121,12 +2306,20 @@ function RiskIntelligenceView() {
             </div>
             <div>
               <h1 className="section-title">Inteligencia de riesgo</h1>
-              <p className="text-sm text-slate-500">Motor de senales para apoyar revision interna.</p>
+              <p className="text-sm text-slate-500">Modelo tecnico previo / evidencia historica del prototipo operativo.</p>
             </div>
           </div>
-          <button className="primary-button" type="button" onClick={evaluateExample} disabled={isPredicting || !modelInfo?.available}>
-            {isPredicting ? 'Evaluando...' : 'Evaluar ejemplo'}
-          </button>
+          <div className="flex flex-wrap gap-3">
+            <button className="secondary-button" type="button" onClick={onResearch}>
+              Ver resultados finales de investigacion
+            </button>
+            <button className="primary-button" type="button" onClick={evaluateExample} disabled={isPredicting || !modelInfo?.available}>
+              {isPredicting ? 'Evaluando...' : 'Evaluar ejemplo'}
+            </button>
+          </div>
+        </div>
+        <div className="mt-5 rounded-md border border-amber-200 bg-amber-50 p-4 text-sm leading-6 text-amber-900">
+          Esta vista conserva resultados tecnicos previos de `fraud-model-v1` y `risk-engine-v1.1` como evidencia historica. Los resultados academicos finales E5 se presentan en "Resultados de investigacion".
         </div>
         {modelInfo?.available ? (
           <div className="mt-6 grid gap-3 md:grid-cols-6">
@@ -2191,7 +2384,7 @@ function RiskIntelligenceView() {
       </section>
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <AnalyticsPanel title="Comparacion de modelos">
+        <AnalyticsPanel title="Comparacion de modelos historicos">
           <div className="overflow-x-auto">
             <table className="w-full text-left text-sm">
               <thead className="text-slate-500">
@@ -2239,7 +2432,7 @@ function RiskIntelligenceView() {
         <AnalyticsPanel title="Uso previsto">
           <p className="text-sm leading-7 text-slate-600">
             El motor combina reglas, probabilidad ML y comportamiento atipico. Recomienda revision interna cuando corresponde,
-            pero no confirma fraude ni bloquea operaciones de forma automatica.
+            pero no confirma fraude ni bloquea operaciones de forma automatica. Esta evidencia corresponde al prototipo operativo historico, no al resultado academico final E5.
           </p>
         </AnalyticsPanel>
       </section>
@@ -2789,6 +2982,9 @@ function RiskReviewView({ showMessage }: { showMessage: (message: string, type: 
           <EmptyState text="Selecciona una evaluacion para ver el detalle." />
         ) : (
           <div className="mt-5 space-y-5">
+            <p className="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm leading-6 text-slate-600">
+              Esta evaluacion corresponde al motor operativo del prototipo. Las bandas LOW / MEDIUM / HIGH priorizan revision humana y no constituyen confirmacion legal de fraude.
+            </p>
             <div className="grid gap-3 sm:grid-cols-3">
               <Metric label="Final" value={formatNullableScore(selected.final_risk_score)} />
               <Metric label="Banda" value={riskBandLabel(selected.risk_band)} />
@@ -4234,6 +4430,14 @@ function NavButton({ active, label, onClick }: { active: boolean; label: string;
     <button className={active ? 'nav-button-active' : 'nav-button'} type="button" onClick={onClick}>
       {label}
     </button>
+  );
+}
+
+function NavGroupLabel({ label }: { label: string }) {
+  return (
+    <span className="flex items-center px-2 text-[11px] font-bold uppercase tracking-widest text-slate-400">
+      {label}
+    </span>
   );
 }
 
